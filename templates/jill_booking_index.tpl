@@ -49,8 +49,8 @@
             <th scope="col" class="th_style"><span class="visually-hidden"><{$smarty.const._MD_JSESSION}></span></th>
             <{foreach from=$weekArr item=week}>
               <th scope="col" class="th_style">
-                <div><{$week.d|date_format:'%Y'}></div>
-                <div><{$week.d|date_format:'%m-%d'}></div>
+                <div><{$week.y}></div>
+                <div><{$week.md}></div>
                 <div>(<{$week.w}>)</div>
               </th>
             <{/foreach}>

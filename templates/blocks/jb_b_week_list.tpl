@@ -17,12 +17,12 @@
            <thead>
             <tr style="background-color: #5AB1D0;">
                <th scope="col" style="text-align:center;">
-                 <div><{$smarty.now|date_format:'%Y'}></div>
+                 <div><{$block.weekArr.0.y}></div>
                  <div><{$smarty.const._MB_JSESSION}></div>
                </th>
                  <{foreach from=$block.weekArr item=week}>
                     <th scope="col" style="text-align:center;">
-                      <div style='text-align: center; vertical-align: middle; font-size: 1.2em;'><{$week.d|date_format:'%m/%d'}></div>
+                      <div style='text-align: center; vertical-align: middle; font-size: 1.2em;'><{$week.md}></div>
                       <div style='text-align: center; vertical-align: middle; font-size: 0.8em;'><{$week.w}></div>
                     </th>
                  <{/foreach}>

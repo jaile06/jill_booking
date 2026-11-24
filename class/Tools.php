@@ -155,7 +155,9 @@ class Tools
         $sunday = strtotime("$date -" . date('w', strtotime($date)) . ' days');
         $week = [];
         for ($i = 0; $i <= 6; $i++) {
-            $week[$i] = ['d' => date('Y-m-d', strtotime("+$i days", $sunday)), 'w' => self::week_name($i)];
+            $day = strtotime("+$i days", $sunday);
+            // y、md 供樣板顯示，避免 Smarty 3 的 date_format 呼叫已棄用的 strftime()
+            $week[$i] = ['d' => date('Y-m-d', $day), 'y' => date('Y', $day), 'md' => date('m-d', $day), 'w' => self::week_name($i)];
         }
         return $week;
     }
