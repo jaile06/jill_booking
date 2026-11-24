@@ -1,7 +1,5 @@
 <{if $all_content|default:false}>
     <{if $jill_book_adm|default:false}>
-        <{$delete_jill_booking_item_func|default:''}>
-        <{$jill_booking_item_jquery_ui|default:''}>
         <script type="text/javascript">
             $(document).ready(function(){
                 $("#jill_booking_item_sort").sortable({ opacity: 0.6, cursor: "move", update: function() {
@@ -18,24 +16,24 @@
     <table class="table table-striped table-hover">
         <thead>
         <tr class="bg-secondary">
-            <th>
+            <th scope="col">
             <!--場地名稱-->
             <{$smarty.const._MA_JILLBOOKIN_JBI_TITLE}>
             </th>
-            <th>
+            <th scope="col">
             <!--啟用日期-->
             <{$smarty.const._MA_JILLBOOKIN_JBI_PERIOD}>
             </th>
-            <th>
+            <th scope="col">
             <!--是否可借-->
             <{$smarty.const._MA_JILLBOOKIN_JBI_ENABLE}>
             </th>
-            <th>
+            <th scope="col">
             <!--審核者-->
             <{$smarty.const._MA_JILLBOOKIN_JBI_APPROVAL}>
             </th>
             <{if $jill_book_adm|default:false}>
-            <th><{$smarty.const._TAD_FUNCTION}></th>
+            <th scope="col"><{$smarty.const._TAD_FUNCTION}></th>
             <{/if}>
         </tr>
         </thead>
@@ -77,7 +75,7 @@
 
 
     <{if $jill_book_adm|default:false}>
-        <div class="text-right text-end">
+        <div class="text-end">
         <a href="<{$xoops_url}>/modules/jill_booking/admin/main.php?op=jill_booking_item_form" class="btn btn-info"><{$smarty.const._MA_JILLBOOKIN_ADD}></a>
         </div>
     <{/if}>

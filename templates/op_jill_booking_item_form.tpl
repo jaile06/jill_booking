@@ -4,17 +4,17 @@
   <form action="<{$action|default:''}>" method="post" id="myForm" role="form">
     <!--場地名稱-->
     <div class="form-group row mb-3">
-      <label class="col-sm-2 col-form-label text-sm-right  text-sm-end">
+      <label class="col-sm-2 col-form-label text-sm-end" for="jbi_title">
         <{$smarty.const._MA_JILLBOOKIN_JBI_TITLE}>
       </label>
       <div class="col-sm-10">
-        <input type="text" name="jbi_title" id="jbi_title" class="form-control " value="<{$jbi_title|default:''}>" placeholder="<{$smarty.const._MA_JILLBOOKIN_JBI_TITLE}>">
+        <input type="text" name="jbi_title" id="jbi_title" class="form-control validate[required]" value="<{$jbi_title|default:''}>" placeholder="<{$smarty.const._MA_JILLBOOKIN_JBI_TITLE}>">
       </div>
     </div>
 
     <!--啟用日期-->
     <div class="form-group row mb-3">
-      <label class="col-sm-2 col-form-label text-sm-right  text-sm-end">
+      <label class="col-sm-2 col-form-label text-sm-end" for="jbi_start">
         <{$smarty.const._MA_JILLBOOKIN_JBI_START}>
       </label>
       <div class="col-sm-6">
@@ -24,7 +24,7 @@
 
     <!--停用日期-->
     <div class="form-group row mb-3">
-      <label class="col-sm-2 col-form-label text-sm-right  text-sm-end">
+      <label class="col-sm-2 col-form-label text-sm-end" for="jbi_end">
         <{$smarty.const._MA_JILLBOOKIN_JBI_END}>
       </label>
       <div class="col-sm-6">
@@ -32,21 +32,11 @@
       </div>
     </div>
 
-    <!--場地排序-->
-    <!-- <div class="form-group row mb-3">
-      <label class="col-sm-2 col-form-label text-sm-right  text-sm-end">
-        <{$smarty.const._MA_JILLBOOKIN_JBI_SORT}>
-      </label>
-      <div class="col-sm-2">
-        <input type="text" name="jbi_sort" id="jbi_sort" class="form-control " value="<{$jbi_sort|default:''}>" placeholder="<{$smarty.const._MA_JILLBOOKIN_JBI_SORT}>">
-      </div>
-    </div> -->
-
     <!--是否可借-->
     <div class="form-group row mb-3">
-      <label class="col-sm-2 col-form-label text-sm-right  text-sm-end">
+      <div class="col-sm-2 col-form-label text-sm-end" id="jbi_enable_label">
         <{$smarty.const._MA_JILLBOOKIN_JBI_ENABLE}>
-      </label>
+      </div>
       <div class="col-sm-10">
 
         <div class="form-check form-check-inline">
@@ -69,7 +59,7 @@
 
     <!--場地說明-->
     <div class="form-group row mb-3">
-      <label class="col-sm-2 col-form-label text-sm-right  text-sm-end">
+      <label class="col-sm-2 col-form-label text-sm-end" for="jbi_desc">
         <{$smarty.const._MA_JILLBOOKIN_JBI_DESC}>
       </label>
       <div class="col-sm-10">

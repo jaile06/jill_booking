@@ -1,5 +1,5 @@
 <{$toolbar|default:''}>
-<h3 class='sr-only'><{$smarty.const._MD_JILLBOOKIN_SMNAME4}></h3>
+<h3 class="visually-hidden"><{$smarty.const._MD_JILLBOOKIN_SMNAME4}></h3>
 
 <{if $now_op=="jill_booking_approvallist"}>
   <script type='text/javascript'>
@@ -7,56 +7,55 @@
       $.post("listapproval.php", {op: 'update_jb_status', jb_sn: jb_sn, jb_date: jb_date,jbt_sn: jbt_sn, jbi_sn: jbi_sn, XOOPS_TOKEN_REQUEST: '<{$token|default:''}>' },
       function(data) {
         if(data=='1'){
-          $('#pass').addClass('col-sm-2 alert alert-success') ;
+          $('#pass').attr('class','my-2 alert alert-success');
           $('#pass').text('<{$smarty.const._MD_UPDATE_COMPLETED}>');
           $('.'+jb_date+'_'+jbt_sn).remove();
         }
         else{
-          $('#pass').addClass('span2 alert alert-danger') ;
+          $('#pass').attr('class','my-2 alert alert-danger');
           $('#pass').text('<{$smarty.const._MD_UPDATE_FAILED}>');
         }
       }).fail(function(xhr) {
-        $('#pass').addClass('alert alert-danger').text(xhr.responseText);
+        $('#pass').attr('class','my-2 alert alert-danger').text(xhr.responseText);
       });
     }
   </script>
 
-  <select name="jbi_sn" id="jbi_sn" class="form-control form-select" style="width: auto;" onChange="location.href='<{$action|default:''}>?jbi_sn='+this.value" title='jbi_sn'>
+  <select name="jbi_sn" id="jbi_sn" class="form-select w-auto" onchange="location.href='<{$action|default:''}>?jbi_sn='+this.value" aria-label="<{$smarty.const._MD_JILLBOOKIN_CHOOSEITEM}>">
     <option value=""><{$smarty.const._MD_JILLBOOKIN_CHOOSEITEM}></option>
     <{$item_opt|default:''}>
   </select>
 
   <{if $all_content|default:false}>
-    <{$delete_jill_booking_func|default:''}>
-    <div id="pass" class="my-2"></div>
-    <table class="table table-striped table-hover table-bordered table-sm"  mt-3>
+    <div id="pass" class="my-2" role="status"></div>
+    <table class="table table-striped table-hover table-bordered table-sm mt-3">
       <thead>
         <tr>
-          <th>
+          <th scope="col">
               <!--預約者-->
               <{$smarty.const._MD_JILLBOOKIN_JB_UID}>
           </th>
-          <th>
+          <th scope="col">
               <!--預約日期-->
               <{$smarty.const._MD_JILLBOOKIN_JB_BOOKING_TIME}>
           </th>
-          <th>
+          <th scope="col">
               <!--星期--><!--節次-->
               <{$smarty.const._MD_JWEEK}> / <{$smarty.const._MD_JSESSION}>
           </th>
-          <th>
+          <th scope="col">
               <!--順位-->
               <{$smarty.const._MD_WAITING}>
           </th>
-          <!--<th>
+          <!--<th scope="col">
             已審核者
             <{$smarty.const._MD_JILLBOOKIN_HADPASS}>
           </th>-->
-          <th>
+          <th scope="col">
             <!-- 理由 -->
             <{$smarty.const._MD_JILLBOOKIN_CONTENT}>
           </th>
-          <th><{$smarty.const._TAD_FUNCTION}></th>
+          <th scope="col"><{$smarty.const._TAD_FUNCTION}></th>
 
         </tr>
       </thead>
@@ -71,7 +70,7 @@
             <td>
               <!--預約日期-->
               <div><{$data.jb_date}></div>
-              <div style="font-size:0.6em;color: #EA4335;"><{$data.had_pass}><div>
+              <div class="small jb_closed"><{$data.had_pass}></div>
             </td>
             <td>
               <!--星期--><!--節次-->

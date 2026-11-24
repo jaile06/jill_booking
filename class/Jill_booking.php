@@ -6,6 +6,7 @@ use XoopsModules\Tadtools\EasyResponsiveTabs;
 use XoopsModules\Tadtools\FormValidator;
 use XoopsModules\Tadtools\Jeditable;
 use XoopsModules\Tadtools\My97DatePicker;
+use XoopsModules\Tadtools\SweetAlert;
 use XoopsModules\Tadtools\Utility;
 
 // 預約主檔（含 week 子表）
@@ -86,13 +87,13 @@ class Jill_booking
             'jb_sn' => $jb_sn, 'jb_uid' => $xoopsUser->uid(), 'jb_booking_content' => _MD_INDIVIDUAL_BOOKING,
             'jb_status' => empty($slot['jbi_approval']) ? '1' : '0',
         ];
-        return $jeditable->render('force') . self::cell_own($booking, 0, 0, $slot, $jb_date, '');
+        return $jeditable->render('force') . self::cell_own($booking, $slot, $jb_date, '');
     }
 
     // 週曆
     public static function calendar($jbi_sn, $getdate = '')
     {
-        global $xoopsTpl, $xoopsUser, $xoTheme;
+        global $xoopsTpl, $xoopsUser;
         $item = $jbi_sn ? Jill_booking_item::get($jbi_sn, true) : false;
         if ($item) {
             $myts = \MyTextSanitizer::getInstance();
@@ -116,7 +117,7 @@ class Jill_booking
                     if ($date < $start) {
                         //過去預約
                         if ($main) {
-                            $cell = ['color' => '#959595', 'content' => self::who($main)] + $cell;
+                            $cell = ['color' => '#595959', 'content' => self::who($main)] + $cell;
                         }
                     } elseif (($end === '' || $date <= $end) && in_array((string) $wk, explode(',', (string) $time['jbt_week']), true)) {
                         //可預約期間
@@ -124,16 +125,16 @@ class Jill_booking
                             if ($_SESSION['can_booking']) {
                                 $cell['status'] = ['func' => 'single_insert_booking', 'time' => $time['jbt_sn'], 'weekinfo' => $date, 'jbi_sn' => $jbi_sn];
                             } else {
-                                $cell = ['color' => '#EA4335', 'content' => _MD_JILLBOOKIN_NO] + $cell;
+                                $cell = ['color' => '#B3261E', 'content' => _MD_JILLBOOKIN_NO] + $cell;
                             }
                         } else {
                             $users = Jill_booking_date::users_icon($list);
                             $slot = $time + ['jbi_sn' => $jbi_sn];
                             if ($uid == $main['jb_uid'] && $_SESSION['can_booking']) {
                                 self::editable($jeditable, $main['jb_sn']);
-                                $content = self::cell_own($main, $t, $wk, $slot, $date, $users);
+                                $content = self::cell_own($main, $slot, $date, $users);
                             } else {
-                                $head = $is_approver ? self::delete_icon($main, $t, $wk, $slot, $date) : self::who($main);
+                                $head = $is_approver ? self::delete_icon($main, $slot, $date) : self::who($main);
                                 $content = $head . $users . "<div class='show_reason'>" . Tools::esc($main['jb_booking_content']) . '</div>';
                             }
                             $cell = ['color' => '#000000', 'content' => $content] + $cell;
@@ -152,11 +153,14 @@ class Jill_booking
             $xoopsTpl->assign('bookingArr', $bookingArr);
             $xoopsTpl->assign('itemArr', $item);
             $xoopsTpl->assign('weekArr', $weekArr);
+            $xoopsTpl->assign('prev_date', date('Y-m-d', strtotime($weekArr[0]['d'] . ' -1 week')));
+            $xoopsTpl->assign('next_date', date('Y-m-d', strtotime($weekArr[0]['d'] . ' +1 week')));
         }
 
         $xoopsTpl->assign('jquery', Utility::get_jquery(true));
-        $xoTheme->addStylesheet('modules/tadtools/jquery.qtip/jquery.qtip.css');
-        $xoTheme->addScript('modules/tadtools/jquery.qtip/jquery.qtip.js');
+        Jill_booking_date::qtip();
+        $sweet_alert = new SweetAlert();
+        $sweet_alert->render('delete_booking', "{$_SERVER['PHP_SELF']}?op=delete_booking&XOOPS_TOKEN_REQUEST=" . Tools::token() . '&', ['jbt_sn', 'jb_date', 'jbi_sn']);
         $xoopsTpl->assign('token', Tools::token());
         $xoopsTpl->assign('jbi_sn', $item ? $jbi_sn : '');
         $xoopsTpl->assign('item_opt', Jill_booking_item::options($jbi_sn));
@@ -171,16 +175,17 @@ class Jill_booking
         return $booking['jb_status'] == '1' ? $name : _MD_APPROVING . ":{$name}";
     }
 
-    private static function cell_own($booking, $t, $wk, $slot, $date, $users)
+    private static function cell_own($booking, $slot, $date, $users)
     {
-        return self::delete_icon($booking, $t, $wk, $slot, $date) . $users
+        return self::delete_icon($booking, $slot, $date) . $users
             . "<div id='jb_booking_content{$booking['jb_sn']}' class='edit show_reason'>" . Tools::esc($booking['jb_booking_content']) . '</div>';
     }
 
-    private static function delete_icon($booking, $t, $wk, $slot, $date)
+    private static function delete_icon($booking, $slot, $date)
     {
         $name = $booking['jb_status'] == '1' ? \XoopsUser::getUnameFromId($booking['jb_uid'], 1) : _MD_APPROVING;
-        return "{$name}<a href=\"javascript:delete_booking({$t} , {$wk} , {$slot['jbt_sn']},'{$date}',{$slot['jbi_sn']});\" style='color:#D44950;' ><i class='fa fa-times' ></i></a>";
+        $label = _TAD_DEL . " {$date} " . Tools::esc($slot['jbt_title']);
+        return "{$name}<a href=\"javascript:delete_booking({$slot['jbt_sn']},'{$date}',{$slot['jbi_sn']});\" class='btn btn-link jb_delete' aria-label='{$label}'><i class='fa fa-times' aria-hidden='true'></i></a>";
     }
 
     private static function editable($jeditable, $jb_sn)
@@ -203,16 +208,14 @@ class Jill_booking
             [$start, $end] = Tools::item_range($item);
             $item['jbi_title'] = Tools::esc($item['jbi_title']);
 
-            $weektime = [];
             $timeArr = Jill_booking_time::get_all($jbi_sn);
             foreach ($timeArr as $t => $time) {
                 $timeArr[$t]['jbt_title'] = Tools::esc($time['jbt_title']);
                 foreach (Jill_booking_time::WEEKS as $w) {
-                    $weektime[$t][$w]['jbt_week'] = in_array($w, explode(',', (string) $time['jbt_week']), true)
-                        ? "<input type='checkbox' name='jb_week[{$time['jbt_sn']}][]' value='$w'>"
-                        : "<span style='color:#D44950'><i class='fa fa-times'></i></span>";
+                    $timeArr[$t]['open'][$w] = in_array($w, explode(',', (string) $time['jbt_week']), true);
                 }
             }
+            My97DatePicker::render();
             $formValidator = new FormValidator('#myForm', true);
             $xoopsTpl->assign('formValidator_code', $formValidator->render());
             Utility::token_form();
@@ -221,7 +224,7 @@ class Jill_booking
             $xoopsTpl->assign('jb_end_date', $start);
             $xoopsTpl->assign('max_date', $end);
             $xoopsTpl->assign('timeArr', $timeArr);
-            $xoopsTpl->assign('weektime', $weektime);
+            $xoopsTpl->assign('weeks', array_map([Tools::class, 'week_name'], range(0, 6)));
             $xoopsTpl->assign('next_op', 'insert_jill_booking');
         }
         $xoopsTpl->assign('item_opt', Jill_booking_item::options($jbi_sn));
@@ -291,17 +294,19 @@ class Jill_booking
             }
         }
 
-        $check = "<span style='color:#D44950'><i class='fa fa-check'></i></span>";
         $dateweek = [];
         foreach (self::batch_rows($batch) as [$slot, $date]) {
             $list = array_column($booked[$slot['jbt_sn']][$date] ?? [], null, 'jb_waiting');
             $cells = [];
             for ($j = 1; $j <= max(1, $maxwaiting); $j++) {
                 // 已有人的順位顯示姓名，下一個可排的順位打勾
-                $cells[] = ['name' => isset($list[$j]) ? \XoopsUser::getUnameFromId($list[$j]['jb_uid'], 1) : ($j === count($list) + 1 ? $check : '')];
+                $cells[] = [
+                    'name' => isset($list[$j]) ? \XoopsUser::getUnameFromId($list[$j]['jb_uid'], 1) : '',
+                    'free' => $j === count($list) + 1,
+                ];
             }
             $dateweek[] = [
-                'jb_date' => $date, 'week' => date('w', strtotime($date)), 'jbt_sn' => $slot['jbt_sn'],
+                'jb_date' => $date, 'week' => Tools::week_name(date('w', strtotime($date))), 'jbt_sn' => $slot['jbt_sn'],
                 'jbt_title' => Tools::esc($slot['jbt_title']), 'waitingArr' => $cells, 'jb_exit' => $list ? 1 : 0,
             ];
         }
@@ -310,7 +315,7 @@ class Jill_booking
         Utility::token_form();
         $xoopsTpl->assign('jbi_title', Tools::esc($item['jbi_title']));
         $xoopsTpl->assign('batch_key', $key);
-        $xoopsTpl->assign('maxwaiting', $maxwaiting);
+        $xoopsTpl->assign('waitings', range(1, max(1, $maxwaiting)));
         $xoopsTpl->assign('dateweek', $dateweek);
         $xoopsTpl->assign('now_op', 'list_jill_booking');
         $xoopsTpl->assign('action', $_SERVER['PHP_SELF']);
@@ -463,11 +468,11 @@ class Jill_booking
                     $main = Jill_booking_date::main($list);
                     $cell = ['color' => 'transparent', 'content' => ''];
                     if ($week['d'] < $today) {
-                        $cell = ['color' => '#959595', 'content' => $main ? self::who($main) : _MD_NO_RECORD];
+                        $cell = ['color' => '#595959', 'content' => $main ? self::who($main) : _MD_NO_RECORD];
                     } elseif (in_array((string) $wk, explode(',', (string) $time['jbt_week']), true)) {
                         $cell = $main
                             ? ['color' => '#000000', 'content' => self::who($main) . Jill_booking_date::users_icon($list)]
-                            : ['color' => '#EA4335', 'content' => _MD_JILLBOOKIN_NO];
+                            : ['color' => '#B3261E', 'content' => _MD_JILLBOOKIN_NO];
                     }
                     $item['bookingArr'][$t][$wk] = $cell;
                 }

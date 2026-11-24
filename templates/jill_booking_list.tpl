@@ -1,10 +1,10 @@
 <{$toolbar|default:''}>
-<h3 class='sr-only'><{$smarty.const._MD_JILLBOOKIN_SMNAME3}></h3>
+<h3 class="visually-hidden"><{$smarty.const._MD_JILLBOOKIN_SMNAME3}></h3>
 <!--列出所有資料-->
 <{if $now_op=="jill_booking_list"}>
   <div class="row mb-2">
     <div class="col-auto">
-      <select id="jbi_sn" name="jbi_sn" class="form-control form-select " style="width: auto;" onchange="location.href='<{$action|default:''}>?jbi_sn='+this.value" title='jbi_sn'>
+      <select id="jbi_sn" name="jbi_sn" class="form-select w-auto" onchange="location.href='<{$action|default:''}>?jbi_sn='+this.value" aria-label="<{$smarty.const._MD_JILLBOOKIN_CHOOSEITEM}>">
         <option value=""><{$smarty.const._MD_JILLBOOKIN_CHOOSEITEM}></option>
         <{$item_opt|default:''}>
       </select>
@@ -12,36 +12,35 @@
   </div>
 
   <{if $all_content|default:false}>
-    <{$delete_jill_booking_func|default:''}>
 
     <table class="table table-striped table-hover">
       <thead>
         <tr>
-          <th class="col-sm-2">
+          <th scope="col" class="col-sm-2">
             <!--場地-->
             <{$smarty.const._MD_JILLBOOKIN_ITEM}>
           </th>
-          <th class="col-sm-2">
+          <th scope="col" class="col-sm-2">
               <!--預約者-->
               <{$smarty.const._MD_JILLBOOKIN_JB_UID}>
           </th>
-          <th class="col-sm-2">
+          <th scope="col" class="col-sm-2">
             <!--預約日期-->
             <{$smarty.const._MD_JILLBOOKIN_JB_BOOKING_TIME}>
           </th>
-          <th class="col-sm-1">
+          <th scope="col" class="col-sm-1">
             <!--順位-->
             <{$smarty.const._MD_WAITING}>
           </th>
-          <th class="col-sm-2">
+          <th scope="col" class="col-sm-2">
             <!--理由-->
             <{$smarty.const._MD_JILLBOOKIN_CONTENT}>
           </th>
-          <th class="col-sm-1">
+          <th scope="col" class="col-sm-1">
             <!--是否核准-->
             <{$smarty.const._MD_JILLBOOKIN_JB_STATUS}>
           </th>
-          <th class="col-sm-2"><{$smarty.const._TAD_FUNCTION}></th>
+          <th scope="col" class="col-sm-2"><{$smarty.const._TAD_FUNCTION}></th>
 
         </tr>
       </thead>

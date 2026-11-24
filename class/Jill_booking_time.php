@@ -35,12 +35,17 @@ class Jill_booking_time
             $times = self::booked_count($jbt_sn);
             $data['booking_times'] = $times ? sprintf(_MA_JILLBOOKIN_BOOKING_TIME, $times) : '';
             foreach (self::WEEKS as $w) {
-                $pic = in_array($w, explode(',', (string) $data['jbt_week']), true) ? 'yes.gif' : 'no.gif';
-                $data["w$w"] = "<img src='../images/{$pic}' id='{$jbt_sn}_{$w}' onClick=\"change_enable($jbt_sn,$w);\" style='cursor: pointer;'>";
+                $data['open'][$w] = in_array($w, explode(',', (string) $data['jbt_week']), true);
             }
             $all_content[] = $data;
         }
 
+        // 星期一到星期日
+        $weeks = [];
+        foreach ([1, 2, 3, 4, 5, 6, 0] as $w) {
+            $weeks[$w] = constant("_MA_JILLBOOKIN_W$w");
+        }
+        $xoopsTpl->assign('weeks', $weeks);
         $xoopsTpl->assign('token', Tools::token());
         $xoopsTpl->assign('item', $item);
         $xoopsTpl->assign('action', $_SERVER['PHP_SELF']);

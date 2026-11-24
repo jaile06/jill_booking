@@ -13,6 +13,23 @@
 
 .th_style {
     background-color: #a2ccee ! important;
+    color: #000000 ! important;
     text-align: center;
     vertical-align: middle;
+}
+
+.jb_closed {
+    color: #B3261E;
+}
+
+.jb_delete,
+.jb_users {
+    min-width: 44px;
+    min-height: 44px;
+    line-height: 32px;
+    padding: 4px;
+}
+
+.jb_delete {
+    color: #B3261E;
 }

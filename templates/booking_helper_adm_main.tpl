@@ -1,29 +1,29 @@
 
     <div class="row">
       <div class="col-xs-3 col-sm-2">
-        <p>選擇預約場地：</p>
-        <select name="jbi_sn" id="jbi-sn" size="10" class="form-control form-select"  title='jbi_sn'>
+        <label for="jbi-sn"><{$smarty.const._MA_JILLBOOKIN_HELPER_ITEM}></label>
+        <select name="jbi_sn" id="jbi-sn" size="10" class="form-control form-select" >
           <{foreach from=$items item=item}>
             <option value="<{$item.jbi_sn}>"><{$item.jbi_title}></option>
           <{/foreach}>
         </select>
 
         <div class="form-group" style="position: relative; margin-top: 10px;">
-          <p>選擇預約日期：</p>
-          <input id="booking-date" type="text" placeholder="選擇日期" class="form-control">
-          <img id="date-img" onclick="WdatePicker({el:'booking-date', minDate:'%y-%M-%d'})" src="../images/datePicker.gif" style="position: absolute; bottom: 6px; right: 10px; cursor: pointer;">
+          <label for="booking-date"><{$smarty.const._MA_JILLBOOKIN_HELPER_DATE}></label>
+          <input id="booking-date" type="text" placeholder="<{$smarty.const._MA_JILLBOOKIN_HELPER_DATE_HINT}>" class="form-control">
+          <img id="date-img" alt="<{$smarty.const._MA_JILLBOOKIN_HELPER_DATE_HINT}>" onclick="WdatePicker({el:'booking-date', minDate:'%y-%M-%d'})" src="../images/datePicker.gif" style="position: absolute; bottom: 6px; right: 10px; cursor: pointer;">
         </div>
 
         <div class="form-group" style="margin-top: 10px;">
-          <p>預約理由（選填）：</p>
-          <input id="booking-event" type="text" placeholder="個人預約" class="form-control">
+          <label for="booking-event"><{$smarty.const._MA_JILLBOOKIN_HELPER_EVENT}></label>
+          <input id="booking-event" type="text" placeholder="<{$smarty.const._MD_INDIVIDUAL_BOOKING}>" class="form-control">
         </div>
       </div>
 
       <div class="col-xs-9 col-sm-10">
-        <button type="button" class="btn btn-default btn-outline-primary" id="get-time-btn">取得時段</button>
-        <button type="button" class="btn btn-default btn-outline-primary" id="order-btn" style="display: none;">預約</button>
-        <div id="message" style="display: none; color: #ff0000; padding: 0 10px;"></div>
+        <button type="button" class="btn btn-default btn-outline-primary" id="get-time-btn"><{$smarty.const._MA_JILLBOOKIN_HELPER_GET}></button>
+        <button type="button" class="btn btn-default btn-outline-primary" id="order-btn" style="display: none;"><{$smarty.const._MA_JILLBOOKIN_HELPER_ORDER}></button>
+        <div id="message" role="status" style="display: none; color: #B3261E; padding: 0 10px;"></div>
         <div id="jbi-date-text" style="margin: 10px 0;"></div>
         <div id="time-list"></div>
       </div>
@@ -47,7 +47,7 @@
             'jbi_sn' : null
         };
 
-        const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+        const weekdays = ['<{$smarty.const._MD_JILLBOOKIN_W0}>', '<{$smarty.const._MD_JILLBOOKIN_W1}>', '<{$smarty.const._MD_JILLBOOKIN_W2}>', '<{$smarty.const._MD_JILLBOOKIN_W3}>', '<{$smarty.const._MD_JILLBOOKIN_W4}>', '<{$smarty.const._MD_JILLBOOKIN_W5}>', '<{$smarty.const._MD_JILLBOOKIN_W6}>'];
 
         let data = {...initData};
         // console.log(data, initData);
@@ -82,7 +82,7 @@
                   init();
                   getTimeBtn.hide();
                   // bookingDateInput.val(null);
-                  msgBlock.text("預約完成！！");
+                  msgBlock.text("<{$smarty.const._MA_JILLBOOKIN_HELPER_DONE}>");
                   msgBlock.show();
                   setTimeout(() => {
                       msgBlock.text(null);
@@ -122,19 +122,19 @@
             data.jb_date = bookingDateInput.val();
 
             let weekday = weekdays[(new Date(data.jb_date)).getDay()];
-            jbiDateText.text(`預約日期： ${data.jb_date} (${weekday})`);
+            jbiDateText.text(`<{$smarty.const._MA_JILLBOOKIN_HELPER_BOOK_DATE}> ${data.jb_date} (${weekday})`);
 
             data.jbi_sn = +jbiSnSelect.val();
             //console.log(data, initData);
 
-            timeList.text('資料載入中....');
+            timeList.text('<{$smarty.const._MA_JILLBOOKIN_HELPER_LOADING}>');
             let dayOfWeek = new Date(data.jb_date).getDay();
             //console.log(data.jbi_sn, data.jb_date, dayOfWeek);
             $.get(`${location.href}?op=get_times_of_item&sn=${data.jbi_sn}&date=${data.jb_date}`)
              .then(data => {
                  let items = getTimeByDay(data, dayOfWeek);
                  getTimeBtn.hide();
-                 (items && items.length > 0) ? generateTimeList(items) : timeList.text('無開放之時段');
+                 (items && items.length > 0) ? generateTimeList(items) : timeList.text('<{$smarty.const._MA_JILLBOOKIN_HELPER_NONE}>');
              }).catch(err => console.log(err));
         }
 

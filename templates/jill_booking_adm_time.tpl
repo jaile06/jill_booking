@@ -1,15 +1,14 @@
-
 <{if $now_op=="list_jill_booking_time"}>
   <{$formValidator_code|default:''}>
   <{$jeditable_set|default:''}>
-  <{$delete_jill_booking_time_func|default:''}>
-
-  <script type='text/javascript'>
+  <script type="text/javascript">
     $(document).ready(function(){
       $('#sort').sortable({ opacity: 0.6, cursor: 'move', update: function() {
         var order = $(this).sortable('serialize');
         $.post('save_sort.php', order + '&XOOPS_TOKEN_REQUEST=<{$token|default:''}>', function(theResponse){
           $('#save_msg').html(theResponse);
+        }).fail(function(xhr) {
+          $('#save_msg').text(xhr.responseText);
         });
       }
       });
@@ -17,143 +16,72 @@
     function change_enable(jbt_sn,w){
       $.post("time.php", {op: 'change_enable', jbt_sn: jbt_sn, week: w, XOOPS_TOKEN_REQUEST: '<{$token|default:''}>' },
       function(data) {
-        $('#'+jbt_sn+'_'+w).attr('src',data);
+        var btn = $('#'+jbt_sn+'_'+w);
+        btn.attr('aria-pressed', data.indexOf('yes') > -1);
+        btn.find('img').attr('src', data);
+      }).fail(function(xhr) {
+        $('#save_msg').text(xhr.responseText);
       });
     }
   </script>
-  <h2><{$item.jbi_title}><{$smarty.const._MA_JILLBOOKIN_SETTIME}></h2>
+  <h3><{$item.jbi_title}><{$smarty.const._MA_JILLBOOKIN_SETTIME}></h3>
 
-  <{if $jbi_desc|default:false}>
-    <!--場地說明-->
-    <div class="row">
-        <div class="card card-body bg-light m-1">
-          <{$jbi_desc|default:''}>
-        </div>
-    </div>
-  <{/if}>
-
-  <div id="save_msg"></div>
+  <div id="save_msg" role="status"></div>
   <div class="row">
     <div class="col-sm-7">
-      <form action="time.php" method="post" id="myForm" enctype="multipart/form-data" role="form">
+      <form action="time.php" method="post" id="myForm">
         <table class="table table-striped table-hover">
           <thead>
             <tr class="bg-secondary">
-              <th rowspan="2" style="text-align: center; vertical-align: middle;">
-                <!--時段標題-->
-                <{$smarty.const._MA_JILLBOOKIN_JBT_TITLE}>
-              </th>
-              <th colspan="7" style="text-align: center;">
-                <!--開放星期-->
-                <{$smarty.const._MA_JILLBOOKIN_JBT_WEEK}>
-              </th>
-              <th rowspan="2" style="text-align: center; vertical-align: middle;">
-                <{$smarty.const._TAD_FUNCTION}>
-              </th>
+              <th scope="col" rowspan="2" class="text-center align-middle"><{$smarty.const._MA_JILLBOOKIN_JBT_TITLE}></th>
+              <th scope="colgroup" colspan="7" class="text-center"><{$smarty.const._MA_JILLBOOKIN_JBT_WEEK}></th>
+              <th scope="col" rowspan="2" class="text-center align-middle"><{$smarty.const._TAD_FUNCTION}></th>
             </tr>
             <tr>
-              <th style="background-color: #4E525B;">
-                <!--星期一-->
-                <{$smarty.const._MA_JILLBOOKIN_W1}>
-              </th>
-              <th style="background-color: #4E525B;">
-                <!--星期二-->
-                <{$smarty.const._MA_JILLBOOKIN_W2}>
-              </th>
-              <th style="background-color: #4E525B;">
-                <!--星期三-->
-                <{$smarty.const._MA_JILLBOOKIN_W3}>
-              </th>
-              <th style="background-color: #4E525B;">
-                <!--星期四-->
-                <{$smarty.const._MA_JILLBOOKIN_W4}>
-              </th>
-              <th style="background-color: #4E525B;">
-                <!--星期五-->
-                <{$smarty.const._MA_JILLBOOKIN_W5}>
-              </th>
-              <th style="background-color: #4E525B;">
-                <!--星期六-->
-                <{$smarty.const._MA_JILLBOOKIN_W6}>
-              </th>
-              <th style="background-color: #4E525B;">
-                <!--星期日-->
-                <{$smarty.const._MA_JILLBOOKIN_W0}>
-              </th>
+              <{foreach from=$weeks key=w item=week}>
+                <th scope="col" style="background-color: #4E525B;"><{$week}></th>
+              <{/foreach}>
             </tr>
           </thead>
 
           <tbody id="sort">
-            <{if $all_content|default:false}>
-              <{foreach from=$all_content item=data}>
-                <tr id='tr_<{$data.jbt_sn}>'>
-                  <td style="text-align: center;">
-                    <!--時段標題-->
-                    <div id="jbt_title_<{$data.jbt_sn}>"><{$data.jbt_title}></div>
+            <{foreach from=$all_content item=data}>
+              <tr id="tr_<{$data.jbt_sn}>">
+                <td class="text-center">
+                  <div id="jbt_title_<{$data.jbt_sn}>"><{$data.jbt_title}></div>
+                </td>
+                <{foreach from=$weeks key=w item=week}>
+                  <td class="text-center">
+                    <button type="button" id="<{$data.jbt_sn}>_<{$w}>" class="btn btn-link p-1" onclick="change_enable(<{$data.jbt_sn}>,<{$w}>);" aria-pressed="<{if $data.open.$w}>true<{else}>false<{/if}>" aria-label="<{$data.jbt_title}> <{$week}>">
+                      <img src="../images/<{if $data.open.$w}>yes<{else}>no<{/if}>.gif" alt="">
+                    </button>
                   </td>
-                  <td style="text-align: center;">
-                    <{$data.w1}>
-                  </td>
-                  <td style="text-align: center;">
-                    <{$data.w2}>
-                  </td>
-                  <td style="text-align: center;">
-                    <{$data.w3}>
-                  </td>
-                  <td style="text-align: center;">
-                    <{$data.w4}>
-                  </td>
-                  <td style="text-align: center;">
-                    <{$data.w5}>
-                  </td>
-                  <td style="text-align: center;">
-                    <{$data.w6}>
-                  </td>
-                  <td style="text-align: center;">
-                    <{$data.w0}>
-                  </td>
-                  <td style="text-align: center;">
-                    <img src='<{$xoops_url}>/modules/tadtools/treeTable/images/updown_s.png' style='cursor: s-resize;margin:0px 4px;' alt='<{$smarty.const._TAD_SORTABLE}>' title='<{$smarty.const._TAD_SORTABLE}>'>
-                    <{if $data.booking_times!=""}>
-                      <{$data.booking_times}>
-                    <{else}>
-                      <a href="javascript:delete_jill_booking_time_func(<{$data.jbt_sn}>);" class="btn btn-sm btn-danger"><i class="fa fa-times" aria-hidden="true"></i> <{$smarty.const._TAD_DEL}></a>
-                    <{/if}>
-                  </td>
-                </tr>
-              <{/foreach}>
-            <{/if}>
+                <{/foreach}>
+                <td class="text-center">
+                  <img src="<{$xoops_url}>/modules/tadtools/treeTable/images/updown_s.png" style="cursor: s-resize;margin:0px 4px;" alt="<{$smarty.const._TAD_SORTABLE}>" title="<{$smarty.const._TAD_SORTABLE}>">
+                  <{if $data.booking_times!=""}>
+                    <{$data.booking_times}>
+                  <{else}>
+                    <a href="javascript:delete_jill_booking_time_func(<{$data.jbt_sn}>);" class="btn btn-sm btn-danger"><i class="fa fa-times" aria-hidden="true"></i> <{$smarty.const._TAD_DEL}></a>
+                  <{/if}>
+                </td>
+              </tr>
+            <{/foreach}>
           </tbody>
           <tr>
             <td>
-              <input type="text" name="jbt_title" id="jbt_title" class="form-control validate[required] " value="<{$jbt_title|default:''}>" placeholder="<{$smarty.const._MA_JILLBOOKIN_JBT_TITLE}>">
+              <input type="text" name="jbt_title" id="jbt_title" class="form-control validate[required]" placeholder="<{$smarty.const._MA_JILLBOOKIN_JBT_TITLE}>" aria-label="<{$smarty.const._MA_JILLBOOKIN_JBT_TITLE}>">
             </td>
-            <td style="text-align: center;">
-              <input type="checkbox" name="jbt_week[]" value="1" checked="checked">
-            </td>
-            <td style="text-align: center;">
-              <input type="checkbox" name="jbt_week[]" value="2" checked="checked">
-            </td>
-            <td style="text-align: center;">
-              <input type="checkbox" name="jbt_week[]" value="3" checked="checked">
-            </td>
-            <td style="text-align: center;">
-              <input type="checkbox" name="jbt_week[]" value="4" checked="checked">
-            </td>
-            <td style="text-align: center;">
-              <input type="checkbox" name="jbt_week[]" value="5" checked="checked">
-            </td>
-            <td style="text-align: center;">
-              <input type="checkbox" name="jbt_week[]" value="6">
-            </td>
-            <td style="text-align: center;">
-              <input type="checkbox" name="jbt_week[]" value="0">
-            </td>
+            <{foreach from=$weeks key=w item=week}>
+              <td class="text-center">
+                <input type="checkbox" name="jbt_week[]" value="<{$w}>" aria-label="<{$week}>" <{if $w>0 && $w<6}>checked<{/if}>>
+              </td>
+            <{/foreach}>
             <td>
               <input type="hidden" name="jbi_sn" value="<{$jbi_sn|default:''}>">
               <input type="hidden" name="XOOPS_TOKEN_REQUEST" value="<{$token|default:''}>">
               <input type="hidden" name="op" value="insert_jill_booking_time">
-              <button type="submit" class="btn  btn-outline-primary"><{$smarty.const._MA_JILLBOOKIN_ADD_TIME}></button>
+              <button type="submit" class="btn btn-outline-primary"><{$smarty.const._MA_JILLBOOKIN_ADD_TIME}></button>
             </td>
           </tr>
         </table>
@@ -162,9 +90,7 @@
     <div class="col-sm-5">
       <{if !$all_content}>
         <div class="list-group">
-          <a href="#" class="list-group-item active">
-            <{$smarty.const._MA_JILLBOOKIN_IMPORT}>
-          </a>
+          <div class="list-group-item active"><{$smarty.const._MA_JILLBOOKIN_IMPORT}></div>
           <a href="time.php?op=import_time&jbi_sn=<{$jbi_sn|default:''}>&type=18&XOOPS_TOKEN_REQUEST=<{$token|default:''}>" class="list-group-item"><{$smarty.const._MA_JILLBOOKIN_IMPORT_18}></a>
           <a href="time.php?op=import_time&jbi_sn=<{$jbi_sn|default:''}>&type=apm&XOOPS_TOKEN_REQUEST=<{$token|default:''}>" class="list-group-item"><{$smarty.const._MA_JILLBOOKIN_IMPORT_APM}></a>
           <{foreach from=$place_time item=place}>
@@ -174,5 +100,4 @@
       <{/if}>
     </div>
   </div>
-
 <{/if}>

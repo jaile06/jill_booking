@@ -1,16 +1,11 @@
-
-  <{if $jill_book_adm|default:false}>
-    <{$delete_jill_booking_item_func|default:''}>
-  <{/if}>
-
-  <h2 class="text-center"><{$jbi_title|default:''}></h2>
+  <h3 class="text-center"><{$jbi_title|default:''}></h3>
 
   <{if $jbi_desc|default:false}>
     <!--場地說明-->
     <div class="form-group row mb-3">
-      <label class="col-sm-3 text-right text-end">
+      <div class="col-sm-3 text-end">
         <{$smarty.const._MA_JILLBOOKIN_JBI_DESC}>
-      </label>
+      </div>
       <div class="col-sm-9">
 
         <div class="card card-body bg-light m-1">
@@ -23,9 +18,9 @@
 
   <!--啟用日期-->
   <div class="form-group row mb-3">
-    <label class="col-sm-3 text-right text-end">
+    <div class="col-sm-3 text-end">
       <{$smarty.const._MA_JILLBOOKIN_JBI_START}>
-    </label>
+    </div>
     <div class="col-sm-9">
       <{$jbi_start|default:''}>
     </div>
@@ -33,9 +28,9 @@
 
   <!--停用日期-->
   <div class="form-group row mb-3">
-    <label class="col-sm-3 text-right text-end">
+    <div class="col-sm-3 text-end">
       <{$smarty.const._MA_JILLBOOKIN_JBI_END}>
-    </label>
+    </div>
     <div class="col-sm-9">
       <{$jbi_end|default:''}>
     </div>
@@ -43,9 +38,9 @@
 
   <!--是否可借-->
   <div class="form-group row mb-3">
-    <label class="col-sm-3  text-right text-end">
+    <div class="col-sm-3 text-end">
       <{$smarty.const._MA_JILLBOOKIN_JBI_ENABLE}>
-    </label>
+    </div>
     <div class="col-sm-9">
       <{$jbi_enable|default:''}>
     </div>
@@ -53,15 +48,15 @@
 
   <!--審核者-->
   <div class="form-group row mb-3">
-    <label class="col-sm-3  text-right text-end">
+    <div class="col-sm-3 text-end">
       <{$smarty.const._MA_JILLBOOKIN_JBI_APPROVAL}>
-    </label>
+    </div>
     <div class="col-sm-9">
       <{$jbi_approval|default:''}>
     </div>
   </div>
 
-  <div class="text-right text-end">
+  <div class="text-end">
     <{if $jill_book_adm|default:false}>
       <a href="javascript:delete_jill_booking_item_func(<{$jbi_sn|default:''}>);" class="btn btn-sm btn-danger"><i class="fa fa-times" aria-hidden="true"></i> <{$smarty.const._TAD_DEL}></a>
       <a href="<{$xoops_url}>/modules/jill_booking/admin/main.php?op=jill_booking_item_form&jbi_sn=<{$jbi_sn|default:''}>" class="btn btn-sm btn-warning"><{$smarty.const._TAD_EDIT}></a>

@@ -4,6 +4,7 @@ namespace XoopsModules\Jill_booking;
 use Xmf\Request;
 use XoopsModules\Tadtools\CkEditor;
 use XoopsModules\Tadtools\FormValidator;
+use XoopsModules\Tadtools\My97DatePicker;
 use XoopsModules\Tadtools\SweetAlert;
 use XoopsModules\Tadtools\Tmt;
 use XoopsModules\Tadtools\Utility;
@@ -108,6 +109,7 @@ class Jill_booking_item
             $xoopsTpl->assign($key, Tools::esc($data[$key]));
         }
 
+        My97DatePicker::render();
         $formValidator = new FormValidator('#myForm', true);
         $xoopsTpl->assign('formValidator_code', $formValidator->render());
         Utility::token_form();

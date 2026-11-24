@@ -3,20 +3,16 @@ xoops_loadLanguage('main', 'tadtools');
 //jill_booking-list
 define("_MD_JILLBOOKIN_PLEASE_LOGIN", "To make an reservation, please log in first");
 define("_MD_JILLBOOKIN_CHOOSEITEMINFO", "Please select the field from the drop-down menu above");
-define("_MD_JILLBOOKIN_CHOOSE", "Please choose");
 define("_MD_JILLBOOKIN_NOAPPROVAL", "Non-qualified audit!!");
 define("_MD_JILLBOOKIN_HADPASS", "Had pass");
-define('_MD_JILLBOOKIN_JB_SN', 'Reservation number');
 define('_MD_JILLBOOKIN_JB_BOOKING_CONTENT', 'Reservation Details');
 define('_MD_JILLBOOKIN_JB_DATE', 'All dates');
 define('_MD_JILLBOOKIN_JB_START_DATE', 'Start Date');
 define('_MD_JILLBOOKIN_JB_END_DATE', 'End Date');
-define('_MD_JILLBOOKIN_JB_WEEK', 'Reservation week');
 define('_MD_JILLBOOKIN_JB_UID', 'Reserved by');
 define('_MD_JILLBOOKIN_CONTENT', 'Reservation Details');
 define('_MD_JILLBOOKIN_NO', 'Available');
 define('_MD_JILLBOOKIN_JB_BOOKING_TIME', 'Reservation');
-define('_MD_JILLBOOKIN_JBT_SN', 'Period number');
 define('_MD_JILLBOOKIN_JB_STATUS', 'Status');
 define('_MD_JILLBOOKIN_SMNAME1', 'Reservation');
 define('_MD_JILLBOOKIN_SMNAME2', 'Batch reservation');
@@ -59,3 +55,4 @@ define("_MD_JILLBOOKIN_BAD_ITEM", "Please enter a venue name and valid start/end
 define("_MD_JILLBOOKIN_MAIL_TITLE", "Auto-Reply: booking by %s on %s for %s approved");
 define("_MD_JILLBOOKIN_MAIL_CONTENT", "The booking by %s on %s for %s (%s, %s) has been approved.");
 define("_MD_EXPIRED", "Expired");
+define("_MD_JILLBOOKIN_DESC", "Venue description");

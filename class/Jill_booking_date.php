@@ -64,7 +64,30 @@ class Jill_booking_date
                 . Tools::esc($row['jb_booking_content']) . '</li>';
         }
         // qtip 會把屬性值當 HTML：內容先跳脫，再整段跳脫放進屬性
-        return " <a href='#' qtipOpts=\"{}\" qtip-content='" . Tools::esc($users . '</ol>') . "' ><i class='fa fa-list'></i></a>";
+        return " <a href='#' class='btn btn-link jb_users' qtip-content='" . Tools::esc($users . '</ol>') . "' aria-label='" . _MD_JILLBOOKIN_JB_UID . "' onclick='return false;'><i class='fa fa-list' aria-hidden='true'></i></a>";
+    }
+
+    // 掛上預約者清單的 qtip（週曆與本週區塊共用）；滑鼠與鍵盤焦點都會顯示
+    public static function qtip()
+    {
+        global $xoTheme;
+        if (!$xoTheme) {
+            return;
+        }
+        Utility::get_jquery(true);
+        $xoTheme->addStylesheet('modules/tadtools/jquery.qtip/jquery.qtip.css');
+        $xoTheme->addScript('modules/tadtools/jquery.qtip/jquery.qtip.js');
+        $xoTheme->addScript('', null, "
+            $(document).ready(function(){
+                $('a.jb_users').qtip({
+                    content: {text: function(){ return $(this).attr('qtip-content'); }},
+                    show: {event: 'mouseenter focus'},
+                    hide: {event: 'mouseleave blur'},
+                    style: {classes: 'qtip-blue qtip-rounded qtip-shadow'},
+                    position: {my: 'top left', at: 'top right'}
+                });
+            });
+        ");
     }
 
     // 取消預約：場地審核者可取消該場地任一筆，其他人只能取消自己的

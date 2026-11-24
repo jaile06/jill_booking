@@ -3,20 +3,16 @@ xoops_loadLanguage('main', 'tadtools');
 //jill_booking-list
 define("_MD_JILLBOOKIN_PLEASE_LOGIN", "若要預約請先登入");
 define("_MD_JILLBOOKIN_CHOOSEITEMINFO", "請在上方下拉選單內選擇場地");
-define("_MD_JILLBOOKIN_CHOOSE", "請選擇");
 define("_MD_JILLBOOKIN_NOAPPROVAL", "您沒有審核資格！！");
 define("_MD_JILLBOOKIN_HADPASS", "已核給");
-define("_MD_JILLBOOKIN_JB_SN", "預約編號");
 define("_MD_JILLBOOKIN_JB_BOOKING_CONTENT", "預約理由");
 define("_MD_JILLBOOKIN_JB_DATE", "起訖日期");
 define("_MD_JILLBOOKIN_JB_START_DATE", "開始日期");
 define("_MD_JILLBOOKIN_JB_END_DATE", "結束日期");
-define("_MD_JILLBOOKIN_JB_WEEK", "預約星期");
 define("_MD_JILLBOOKIN_JB_UID", "預約者");
 define("_MD_JILLBOOKIN_CONTENT", "預約理由");
 define("_MD_JILLBOOKIN_NO", "可預約");
 define("_MD_JILLBOOKIN_JB_BOOKING_TIME", "預約日期");
-define("_MD_JILLBOOKIN_JBT_SN", "時段編號");
 define("_MD_JILLBOOKIN_JB_STATUS", "是否核准");
 define("_MD_JILLBOOKIN_SMNAME1", "場地預約");
 define("_MD_JILLBOOKIN_SMNAME2", "批次預約");
@@ -59,3 +55,4 @@ define("_MD_JILLBOOKIN_BAD_ITEM", "請填寫場地名稱與正確的啟用、停
 define("_MD_JILLBOOKIN_MAIL_TITLE", "Auto-Reply:%s於 %s %s 審核通過");
 define("_MD_JILLBOOKIN_MAIL_CONTENT", "%s於 %s 預約了%s:星期 %s %s審核通過");
 define("_MD_EXPIRED", "未開放");
+define("_MD_JILLBOOKIN_DESC", "場地說明");

@@ -16,12 +16,12 @@
           <table class="table table-sm table-striped table-hover table-bordered">
            <thead>
             <tr style="background-color: #5AB1D0;">
-               <th style="text-align:center;">
+               <th scope="col" style="text-align:center;">
                  <div><{$smarty.now|date_format:'%Y'}></div>
                  <div><{$smarty.const._MB_JSESSION}></div>
                </th>
                  <{foreach from=$block.weekArr item=week}>
-                    <th style="text-align:center;">
+                    <th scope="col" style="text-align:center;">
                       <div style='text-align: center; vertical-align: middle; font-size: 1.2em;'><{$week.d|date_format:'%m/%d'}></div>
                       <div style='text-align: center; vertical-align: middle; font-size: 0.8em;'><{$week.w}></div>
                     </th>
@@ -52,5 +52,5 @@
 
 
 <div style="margin: 10px 0px;">
-  <a href="<{$xoops_url}>/modules/jill_booking/index.php" class="btn btn-sm btn-info pull-right float-right float-end"><{$smarty.const._MB_JILLBOOKIN_MORE}></a>
+  <a href="<{$xoops_url}>/modules/jill_booking/index.php" class="btn btn-sm btn-info float-end"><{$smarty.const._MB_JILLBOOKIN_MORE}></a>
 </div>
