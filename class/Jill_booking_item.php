@@ -235,8 +235,8 @@ class Jill_booking_item
     private static function format($data)
     {
         $myts = \MyTextSanitizer::getInstance();
-        $no = '<img src="../images/no.gif" alt="' . _NO . '" title="' . _NO . '">';
-        $yes = '<img src="../images/yes.gif" alt="' . _YES . '" title="' . _YES . '">';
+        $no = '<span class="jb-text-muted"><i class="fa-solid fa-xmark me-1" aria-hidden="true"></i>' . _NO . '</span>';
+        $yes = '<span class="jb-text-success fw-medium"><i class="fa-solid fa-check me-1" aria-hidden="true"></i>' . _YES . '</span>';
         $names = [];
         foreach (array_filter(explode(',', (string) $data['jbi_approval'])) as $uid) {
             $names[] = \XoopsUser::getUnameFromId($uid, 1);

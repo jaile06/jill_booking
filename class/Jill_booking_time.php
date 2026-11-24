@@ -30,7 +30,7 @@ class Jill_booking_time
         $all_content = [];
         foreach (self::get_all($jbi_sn) as $data) {
             $jbt_sn = $data['jbt_sn'];
-            $jeditable->setTextCol("#jbt_title_{$jbt_sn}", 'time.php', '100%', '11pt', "{'jbt_sn':$jbt_sn,'op' : 'save_jbt_title', 'XOOPS_TOKEN_REQUEST' : '" . Tools::token() . "'}", _TAD_EDIT . _MA_JILLBOOKIN_JBT_TITLE);
+            $jeditable->setTextCol("#jbt_title_{$jbt_sn}", 'time.php', '100%', '2.5rem', "{'jbt_sn':$jbt_sn,'op' : 'save_jbt_title', 'XOOPS_TOKEN_REQUEST' : '" . Tools::token() . "'}", _TAD_EDIT . _MA_JILLBOOKIN_JBT_TITLE);
             $data['jbt_title'] = Tools::esc($data['jbt_title']);
             $times = self::booked_count($jbt_sn);
             $data['booking_times'] = $times ? sprintf(_MA_JILLBOOKIN_BOOKING_TIME, $times) : '';

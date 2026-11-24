@@ -58,13 +58,15 @@ class Jill_booking_date
         }
         $users = _MD_JILLBOOKIN_JB_UID . '<ol>';
         foreach ($list as $row) {
-            [$img, $alt] = $row['jb_status'] == '1' ? ['yes.gif', _MD_PASS] : ['no.gif', _MD_APPROVING];
+            [$icon, $alt] = $row['jb_status'] == '1'
+                ? ['<i class="fa-solid fa-check jb-text-success mx-1" aria-hidden="true"></i>', _MD_PASS]
+                : ['<i class="fa-regular fa-clock jb-text-muted mx-1" aria-hidden="true"></i>', _MD_APPROVING];
             $users .= '<li>' . \XoopsUser::getUnameFromId($row['jb_uid'], 1)
-                . '<img src="' . XOOPS_URL . "/modules/jill_booking/images/{$img}\" alt=\"{$alt}\" title=\"{$alt}\">"
+                . "{$icon}({$alt}) "
                 . Tools::esc($row['jb_booking_content']) . '</li>';
         }
         // qtip 會把屬性值當 HTML：內容先跳脫，再整段跳脫放進屬性
-        return " <a href='#' class='btn btn-link jb_users' qtip-content='" . Tools::esc($users . '</ol>') . "' aria-label='" . _MD_JILLBOOKIN_JB_UID . "' onclick='return false;'><i class='fa fa-list' aria-hidden='true'></i></a>";
+        return " <button type='button' class='btn btn-link jb_users p-1' qtip-content='" . Tools::esc($users . '</ol>') . "' aria-label='" . _MD_JILLBOOKIN_JB_UID . "' title='" . _MD_JILLBOOKIN_JB_UID . "'><i class='fa-solid fa-users' aria-hidden='true'></i></button>";
     }
 
     // 掛上預約者清單的 qtip（週曆與本週區塊共用）；滑鼠與鍵盤焦點都會顯示
@@ -79,7 +81,7 @@ class Jill_booking_date
         $xoTheme->addScript('modules/tadtools/jquery.qtip/jquery.qtip.js');
         $xoTheme->addScript('', null, "
             $(document).ready(function(){
-                $('a.jb_users').qtip({
+                $('.jb_users').qtip({
                     content: {text: function(){ return $(this).attr('qtip-content'); }},
                     show: {event: 'mouseenter focus'},
                     hide: {event: 'mouseleave blur'},

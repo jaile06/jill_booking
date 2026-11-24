@@ -1,9 +1,13 @@
-<{if $now_op=="jbi_approval_form"}>
-  <h3 class="text-center"><{$jbi_title|default:''}></h3>
-  <div class="container">
-    <form action="<{$action|default:''}>" method="post" id="myForm">
-      <{$tmt_box|default:''}>
-      <{$token_form|default:''}>
-    </form>
-  </div>
-<{/if}>
+<div class="jb-wrap">
+  <{if $now_op=="jbi_approval_form"}>
+    <div class="container">
+      <div class="border rounded p-3 p-md-4 bg-white">
+        <h3 class="h4 border-bottom pb-2 mb-3"><{$jbi_title|default:''}></h3>
+        <form action="<{$action|default:''}>" method="post" id="myForm">
+          <{$tmt_box|default:''}>
+          <{$token_form|default:''}>
+        </form>
+      </div>
+    </div>
+  <{/if}>
+</div>

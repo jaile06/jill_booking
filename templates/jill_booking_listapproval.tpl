@@ -1,115 +1,91 @@
 <{$toolbar|default:''}>
-<h3 class="visually-hidden"><{$smarty.const._MD_JILLBOOKIN_SMNAME4}></h3>
+<div class="jb-wrap">
+  <h3 class="visually-hidden"><{$smarty.const._MD_JILLBOOKIN_SMNAME4}></h3>
 
-<{if $now_op=="jill_booking_approvallist"}>
-  <script type='text/javascript'>
-    function update_jb_status_func(jb_sn,jb_date,jbt_sn,jbi_sn,i){
-      $.post("listapproval.php", {op: 'update_jb_status', jb_sn: jb_sn, jb_date: jb_date,jbt_sn: jbt_sn, jbi_sn: jbi_sn, XOOPS_TOKEN_REQUEST: '<{$token|default:''}>' },
-      function(data) {
-        if(data=='1'){
-          $('#pass').attr('class','my-2 alert alert-success');
-          $('#pass').text('<{$smarty.const._MD_UPDATE_COMPLETED}>');
-          $('.'+jb_date+'_'+jbt_sn).remove();
-        }
-        else{
-          $('#pass').attr('class','my-2 alert alert-danger');
-          $('#pass').text('<{$smarty.const._MD_UPDATE_FAILED}>');
-        }
-      }).fail(function(xhr) {
-        $('#pass').attr('class','my-2 alert alert-danger').text(xhr.responseText);
-      });
-    }
-  </script>
+  <{if $now_op=="jill_booking_approvallist"}>
+    <script type='text/javascript'>
+      function update_jb_status_func(jb_sn,jb_date,jbt_sn,jbi_sn,i){
+        $.post("listapproval.php", {op: 'update_jb_status', jb_sn: jb_sn, jb_date: jb_date,jbt_sn: jbt_sn, jbi_sn: jbi_sn, XOOPS_TOKEN_REQUEST: '<{$token|default:''}>' },
+        function(data) {
+          if(data=='1'){
+            $('#pass').attr('class','my-3 alert alert-success');
+            $('#pass').text('<{$smarty.const._MD_UPDATE_COMPLETED}>');
+            $('.'+jb_date+'_'+jbt_sn).remove();
+          }
+          else{
+            $('#pass').attr('class','my-3 alert alert-danger');
+            $('#pass').text('<{$smarty.const._MD_UPDATE_FAILED}>');
+          }
+        }).fail(function(xhr) {
+          $('#pass').attr('class','my-3 alert alert-danger').text(xhr.responseText);
+        });
+      }
+    </script>
 
-  <select name="jbi_sn" id="jbi_sn" class="form-control form-select w-auto" onchange="location.href='<{$action|default:''}>?jbi_sn='+this.value" aria-label="<{$smarty.const._MD_JILLBOOKIN_CHOOSEITEM}>">
-    <option value=""><{$smarty.const._MD_JILLBOOKIN_CHOOSEITEM}></option>
-    <{$item_opt|default:''}>
-  </select>
+    <select name="jbi_sn" id="jbi_sn" class="form-control form-select mb-3 w-auto" onchange="location.href='<{$action|default:''}>?jbi_sn='+this.value" aria-label="<{$smarty.const._MD_JILLBOOKIN_CHOOSEITEM}>">
+      <option value=""><{$smarty.const._MD_JILLBOOKIN_CHOOSEITEM}></option>
+      <{$item_opt|default:''}>
+    </select>
 
-  <{if $all_content|default:false}>
-    <div id="pass" class="my-2" role="status"></div>
-    <table class="table table-striped table-hover table-bordered table-sm mt-3">
-      <thead>
-        <tr>
-          <th scope="col">
-              <!--預約者-->
-              <{$smarty.const._MD_JILLBOOKIN_JB_UID}>
-          </th>
-          <th scope="col">
-              <!--預約日期-->
-              <{$smarty.const._MD_JILLBOOKIN_JB_BOOKING_TIME}>
-          </th>
-          <th scope="col">
-              <!--星期--><!--節次-->
-              <{$smarty.const._MD_JWEEK}> / <{$smarty.const._MD_JSESSION}>
-          </th>
-          <th scope="col">
-              <!--順位-->
-              <{$smarty.const._MD_WAITING}>
-          </th>
-          <!--<th scope="col">
-            已審核者
-            <{$smarty.const._MD_JILLBOOKIN_HADPASS}>
-          </th>-->
-          <th scope="col">
-            <!-- 理由 -->
-            <{$smarty.const._MD_JILLBOOKIN_CONTENT}>
-          </th>
-          <th scope="col"><{$smarty.const._TAD_FUNCTION}></th>
+    <{if $all_content|default:false}>
+      <div id="pass" class="my-3" role="status" aria-live="polite"></div>
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle mb-0">
+          <caption class="visually-hidden"><{$smarty.const._MD_JILLBOOKIN_SMNAME4}></caption>
+          <thead class="jb-table-head">
+            <tr>
+              <th scope="col"><{$smarty.const._MD_JILLBOOKIN_JB_UID}></th>
+              <th scope="col"><{$smarty.const._MD_JILLBOOKIN_JB_BOOKING_TIME}></th>
+              <th scope="col"><{$smarty.const._MD_JWEEK}> / <{$smarty.const._MD_JSESSION}></th>
+              <th scope="col"><{$smarty.const._MD_WAITING}></th>
+              <th scope="col"><{$smarty.const._MD_JILLBOOKIN_CONTENT}></th>
+              <th scope="col"><{$smarty.const._TAD_FUNCTION}></th>
+            </tr>
+          </thead>
+          <tbody id="jill_booking_sort">
+            <{foreach from=$all_content key=i item=data}>
+              <tr id="tr_<{$i|default:''}>" class="<{$data.jb_date}>_<{$data.jbt_sn}>">
+                <td><{$data.jb_uid}></td>
+                <td>
+                  <div><{$data.jb_date}></div>
+                  <{if $data.had_pass|default:false}>
+                    <div class="small jb-text-closed"><{$data.had_pass}></div>
+                  <{/if}>
+                </td>
+                <td>
+                  <{if $data.jb_week=="0"}><{$smarty.const._MD_JILLBOOKIN_W0}> / <{$data.jbt_title}>
+                  <{elseif $data.jb_week=="1"}><{$smarty.const._MD_JILLBOOKIN_W1}> / <{$data.jbt_title}>
+                  <{elseif $data.jb_week=="2"}><{$smarty.const._MD_JILLBOOKIN_W2}> / <{$data.jbt_title}>
+                  <{elseif $data.jb_week=="3"}><{$smarty.const._MD_JILLBOOKIN_W3}> / <{$data.jbt_title}>
+                  <{elseif $data.jb_week=="4"}><{$smarty.const._MD_JILLBOOKIN_W4}> / <{$data.jbt_title}>
+                  <{elseif $data.jb_week=="5"}><{$smarty.const._MD_JILLBOOKIN_W5}> / <{$data.jbt_title}>
+                  <{else}><{$smarty.const._MD_JILLBOOKIN_W6}> / <{$data.jbt_title}>
+                  <{/if}>
+                </td>
+                <td class="text-center"><{$data.jb_waiting}></td>
+                <td><{$data.jb_booking_content}></td>
+                <td>
+                  <div class="d-flex flex-wrap justify-content-center gap-1">
+                    <button type="button" onclick="update_jb_status_func(<{$data.jb_sn}>,'<{$data.jb_date}>',<{$data.jbt_sn}>,<{$data.jbi_sn}>,<{$i|default:''}>);" class="jb-action jb-action-success">
+                      <i class="fa-solid fa-check" aria-hidden="true"></i> <{$smarty.const._MD_PASS}>
+                    </button>
+                    <button type="button" onclick="delete_jill_booking_func('<{$data.jb_sn}>_<{$data.jbt_sn}>_<{$data.jb_date}>_<{$data.jbi_sn}>');" class="jb-action jb-action-danger">
+                      <i class="fa-regular fa-trash-can" aria-hidden="true"></i> <{$smarty.const._TAD_DEL}>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            <{/foreach}>
+          </tbody>
+        </table>
+      </div>
 
-        </tr>
-      </thead>
-
-      <tbody id="jill_booking_sort">
-        <{foreach from=$all_content key=i item=data}>
-          <tr id="tr_<{$i|default:''}>" class="<{$data.jb_date}>_<{$data.jbt_sn}>">
-            <td>
-              <!--預約者-->
-              <{$data.jb_uid}>
-            </td>
-            <td>
-              <!--預約日期-->
-              <div><{$data.jb_date}></div>
-              <div class="small jb_closed"><{$data.had_pass}></div>
-            </td>
-            <td>
-              <!--星期--><!--節次-->
-              <{if $data.jb_week=="0"}><{$smarty.const._MD_JILLBOOKIN_W0}> / <{$data.jbt_title}>
-              <{elseif $data.jb_week=="1"}><{$smarty.const._MD_JILLBOOKIN_W1}> / <{$data.jbt_title}>
-              <{elseif $data.jb_week=="2"}><{$smarty.const._MD_JILLBOOKIN_W2}> / <{$data.jbt_title}>
-              <{elseif $data.jb_week=="3"}><{$smarty.const._MD_JILLBOOKIN_W3}> / <{$data.jbt_title}>
-              <{elseif $data.jb_week=="4"}><{$smarty.const._MD_JILLBOOKIN_W4}> / <{$data.jbt_title}>
-              <{elseif $data.jb_week=="5"}><{$smarty.const._MD_JILLBOOKIN_W5}> / <{$data.jbt_title}>
-              <{else }><{$smarty.const._MD_JILLBOOKIN_W6}> / <{$data.jbt_title}>
-              <{/if}>
-
-            </td>
-
-            <td>
-              <!--順位-->
-              <{$data.jb_waiting}>
-
-            </td>
-
-            <!--<td>
-              通過審核者
-              <{$data.had_pass}>
-            </td>-->
-            <td>
-              <!-- 理由 -->
-              <{$data.jb_booking_content}>
-            </td>
-            <td>
-              <a href="javascript:delete_jill_booking_func('<{$data.jb_sn}>_<{$data.jbt_sn}>_<{$data.jb_date}>_<{$data.jbi_sn}>');" class="btn btn-sm btn-danger"><i class="fa fa-times" aria-hidden="true"></i> <{$smarty.const._TAD_DEL}></a>
-              <a href="javascript:update_jb_status_func(<{$data.jb_sn}>,'<{$data.jb_date}>',<{$data.jbt_sn}>,<{$data.jbi_sn}>,<{$i|default:''}>);" class="btn btn-sm btn-primary"><i class="fa fa-check" aria-hidden="true"></i> <{$smarty.const._MD_PASS}></a>
-            </td>
-          </tr>
-        <{/foreach}>
-      </tbody>
-    </table>
-
-    <{$bar|default:''}>
-  <{else}>
-    <div class="alert alert-info text-center mt-5"><{$smarty.const._MD_NO_RECORD}></div>
+      <div class="mt-3"><{$bar|default:''}></div>
+    <{else}>
+      <div class="alert alert-info d-flex align-items-center justify-content-center gap-2 mt-4">
+        <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+        <span><{$smarty.const._MD_NO_RECORD}></span>
+      </div>
+    <{/if}>
   <{/if}>
-<{/if}>
+</div>

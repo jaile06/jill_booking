@@ -125,7 +125,7 @@ class Jill_booking
                     if ($date < $start) {
                         //過去預約
                         if ($main) {
-                            $cell = ['color' => '#595959', 'content' => self::who($main)] + $cell;
+                            $cell = ['color' => '#475569', 'content' => self::who($main)] + $cell;
                         }
                     } elseif (($end === '' || $date <= $end) && in_array((string) $wk, explode(',', (string) $time['jbt_week']), true)) {
                         //可預約期間
@@ -133,7 +133,7 @@ class Jill_booking
                             if ($_SESSION['can_booking']) {
                                 $cell['status'] = ['func' => 'single_insert_booking', 'time' => $time['jbt_sn'], 'weekinfo' => $date, 'jbi_sn' => $jbi_sn];
                             } else {
-                                $cell = ['color' => '#B3261E', 'content' => _MD_JILLBOOKIN_NO] + $cell;
+                                $cell = ['color' => '#0F5132', 'content' => _MD_JILLBOOKIN_NO] + $cell;
                             }
                         } else {
                             $users = Jill_booking_date::users_icon($list);
@@ -145,7 +145,7 @@ class Jill_booking
                                 $head = $is_approver ? self::delete_icon($main, $slot, $date) : self::who($main);
                                 $content = $head . $users . "<div class='show_reason'>" . Tools::esc($main['jb_booking_content']) . '</div>';
                             }
-                            $cell = ['color' => '#000000', 'content' => $content] + $cell;
+                            $cell = ['color' => '#1E293B', 'content' => $content] + $cell;
                         }
                     }
                     $bookingArr[$t][$wk] = $cell;
@@ -193,12 +193,12 @@ class Jill_booking
     {
         $name = $booking['jb_status'] == '1' ? \XoopsUser::getUnameFromId($booking['jb_uid'], 1) : _MD_APPROVING;
         $label = _TAD_DEL . " {$date} " . Tools::esc($slot['jbt_title']);
-        return "{$name}<a href=\"javascript:delete_booking({$slot['jbt_sn']},'{$date}',{$slot['jbi_sn']});\" class='btn btn-link jb_delete' aria-label='{$label}'><i class='fa fa-times' aria-hidden='true'></i></a>";
+        return "<span class='fw-medium'>{$name}</span><button type='button' onclick=\"delete_booking({$slot['jbt_sn']},'{$date}',{$slot['jbi_sn']});\" class='btn btn-link jb_delete p-1' aria-label='{$label}' title='{$label}'><i class='fa-solid fa-xmark' aria-hidden='true'></i></button>";
     }
 
     private static function editable($jeditable, $jb_sn)
     {
-        $jeditable->setTextCol("#jb_booking_content{$jb_sn}", 'index.php', '100px', '1.5em',
+        $jeditable->setTextCol("#jb_booking_content{$jb_sn}", 'index.php', '100%', '2.25rem',
             "{'jb_sn':'" . (int) $jb_sn . "', 'op' : 'save_jb_booking_content', 'XOOPS_TOKEN_REQUEST' : '" . Tools::token() . "'}", 'Edit');
     }
 
@@ -481,11 +481,11 @@ class Jill_booking
                     $main = Jill_booking_date::main($list);
                     $cell = ['color' => 'transparent', 'content' => ''];
                     if ($week['d'] < $today) {
-                        $cell = ['color' => '#595959', 'content' => $main ? self::who($main) : _MD_NO_RECORD];
+                        $cell = ['color' => '#475569', 'content' => $main ? self::who($main) : _MD_NO_RECORD];
                     } elseif (in_array((string) $wk, explode(',', (string) $time['jbt_week']), true)) {
                         $cell = $main
-                            ? ['color' => '#000000', 'content' => self::who($main) . Jill_booking_date::users_icon($list)]
-                            : ['color' => '#B3261E', 'content' => _MD_JILLBOOKIN_NO];
+                            ? ['color' => '#1E293B', 'content' => self::who($main) . Jill_booking_date::users_icon($list)]
+                            : ['color' => '#0F5132', 'content' => _MD_JILLBOOKIN_NO];
                     }
                     $item['bookingArr'][$t][$wk] = $cell;
                 }
@@ -498,8 +498,12 @@ class Jill_booking
     // 區塊共用：語言、頁籤
     public static function block_tabs($type, array $content)
     {
+        global $xoTheme;
+        if ($xoTheme) {
+            $xoTheme->addStylesheet('modules/jill_booking/css/module.css');
+        }
         $id = Utility::randStr();
-        $tabs = new EasyResponsiveTabs('#iteamtab' . $id, $type);
+        $tabs = new EasyResponsiveTabs('#iteamtab' . $id, $type, '#FFFFFF', '#EEF4F8', '#CBD5E1', '#CBD5E1');
         $tabs->rander();
         return ['options0' => $type, 'content' => $content, 'randStr' => $id, 'height' => count($content) * 60];
     }
