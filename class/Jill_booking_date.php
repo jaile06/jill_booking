@@ -8,15 +8,16 @@ use XoopsModules\Tadtools\Utility;
 // token 由入口檔驗證
 class Jill_booking_date
 {
-    // 新增明細；順位與寫入用同一個敘述，避免同時預約撞號
+    // 新增明細；順位、同一人不得重複的檢查與寫入用同一個敘述，避免同時預約撞號
     public static function store($jb_sn, $slot, $date, $approved = null)
     {
-        global $xoopsDB;
+        global $xoopsDB, $xoopsUser;
         $table = $xoopsDB->prefix('jill_booking_date');
         $status = ($approved ?? empty($slot['jbi_approval'])) ? '1' : '0';
         Utility::query("INSERT INTO `$table` (`jb_sn`, `jb_date`, `jbt_sn`, `jb_waiting`, `jb_status`, `approver`, `pass_date`)
-            SELECT ?, ?, ?, COALESCE(MAX(`jb_waiting`), 0) + 1, ?, 0, NULL FROM `$table` WHERE `jb_date`=? AND `jbt_sn`=?",
-            'isissi', [$jb_sn, $date, $slot['jbt_sn'], $status, $date, $slot['jbt_sn']]);
+            SELECT ?, ?, ?, COALESCE(MAX(`jb_waiting`), 0) + 1, ?, 0, NULL FROM `$table` WHERE `jb_date`=? AND `jbt_sn`=?
+            HAVING COALESCE(MAX(`jb_sn` IN (SELECT `jb_sn` FROM `" . $xoopsDB->prefix('jill_booking') . '` WHERE `jb_uid`=?)), 0)=0',
+            'isissii', [$jb_sn, $date, $slot['jbt_sn'], $status, $date, $slot['jbt_sn'], $xoopsUser->uid()]);
     }
 
     // 一段期間的預約：[時段][日期] => 依順位排列的預約
@@ -126,12 +127,18 @@ class Jill_booking_date
         Utility::query("UPDATE `$table` SET `jb_waiting`=`jb_waiting`-1 WHERE `jb_date`=? AND `jbt_sn`=? AND `jb_waiting`>?", 'sii', [$date, $jbt_sn, $waiting]);
 
         // 明細全部刪完才刪主檔
-        $result = Utility::query("SELECT COUNT(*) FROM `$table` WHERE `jb_sn`=?", 'i', [$jb_sn]);
-        [$left] = $xoopsDB->fetchRow($result);
-        if (!$left) {
+        if (!self::count($jb_sn)) {
             Jill_booking::destroy($jb_sn);
         }
         return true;
+    }
+
+    // 一張預約單的明細數
+    public static function count($jb_sn)
+    {
+        global $xoopsDB;
+        $result = Utility::query('SELECT COUNT(*) FROM `' . $xoopsDB->prefix('jill_booking_date') . '` WHERE `jb_sn`=?', 'i', [(int) $jb_sn]);
+        return (int) $xoopsDB->fetchRow($result)[0];
     }
 
     // 個人預約清單

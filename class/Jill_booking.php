@@ -22,6 +22,7 @@ class Jill_booking
     }
 
     // 寫入一筆預約：$rows 為 [[時段, 日期], ...]；$approved 為 null 時依場地是否需審核決定
+    // 本人已約過的時段會略過，全部略過時不留主檔並回傳 0
     public static function store($content, $start, $end, array $rows, $approved = null)
     {
         global $xoopsDB, $xoopsUser;
@@ -33,6 +34,10 @@ class Jill_booking
                 Utility::query('INSERT IGNORE INTO `' . $xoopsDB->prefix('jill_booking_week') . '` (`jb_sn`, `jb_week`, `jbt_sn`) VALUES (?, ?, ?)',
                     'iii', [$jb_sn, (int) date('w', strtotime($date)), $slot['jbt_sn']]);
                 Jill_booking_date::store($jb_sn, $slot, $date, $approved);
+            }
+            if (!Jill_booking_date::count($jb_sn)) {
+                self::destroy($jb_sn);
+                return 0;
             }
         } catch (\Throwable $e) {
             // MyISAM 無交易，自行回滾；回滾失敗會再丟例外
@@ -80,6 +85,9 @@ class Jill_booking
             Tools::deny(_MD_JILLBOOKIN_BAD_DATA, true);
         }
         $jb_sn = self::store(_MD_INDIVIDUAL_BOOKING, $jb_date, $jb_date, [[$slot, $jb_date]]);
+        if (!$jb_sn) {
+            Tools::deny(_MD_JILLBOOKIN_BOOKED_SELF, true);
+        }
 
         $jeditable = new Jeditable();
         self::editable($jeditable, $jb_sn);
@@ -280,7 +288,7 @@ class Jill_booking
     // 第一步與第二步之間的預覽
     public static function batch_preview($key)
     {
-        global $xoopsTpl;
+        global $xoopsTpl, $xoopsUser;
         $batch = self::batch_get($key);
         $item = Jill_booking_item::get($batch['jbi_sn'], true);
         if (!$item) {
@@ -308,6 +316,7 @@ class Jill_booking
             $dateweek[] = [
                 'jb_date' => $date, 'week' => Tools::week_name(date('w', strtotime($date))), 'jbt_sn' => $slot['jbt_sn'],
                 'jbt_title' => Tools::esc($slot['jbt_title']), 'waitingArr' => $cells, 'jb_exit' => $list ? 1 : 0,
+                'own' => in_array($xoopsUser->uid(), array_column($list, 'jb_uid')),
             ];
         }
         usort($dateweek, fn($a, $b) => $a['jb_date'] <=> $b['jb_date']);
@@ -325,18 +334,23 @@ class Jill_booking
     // 第二步：寫入勾選的日期，回傳場地編號
     public static function batch_store($key)
     {
+        global $xoopsUser;
         $batch = self::batch_get($key);
+        $booked = Jill_booking_date::by_range(array_keys($batch['weeks']), $batch['start'], $batch['end']);
         $chosen = Request::getArray('jb_date', [], 'POST');
         $rows = [];
         foreach (self::batch_rows($batch) as [$slot, $date]) {
-            if (in_array($date, (array) ($chosen[$slot['jbt_sn']] ?? []), true) && Tools::bookable($slot, $date)) {
+            $own = in_array($xoopsUser->uid(), array_column($booked[$slot['jbt_sn']][$date] ?? [], 'jb_uid'));
+            if (!$own && in_array($date, (array) ($chosen[$slot['jbt_sn']] ?? []), true) && Tools::bookable($slot, $date)) {
                 $rows[] = [$slot, $date];
             }
         }
         if (!$rows) {
             Tools::deny(_MD_JILLBOOKIN_BAD_DATA);
         }
-        self::store($batch['content'], $batch['start'], $batch['end'], $rows);
+        if (!self::store($batch['content'], $batch['start'], $batch['end'], $rows)) {
+            Tools::deny(_MD_JILLBOOKIN_BOOKED_SELF);
+        }
         unset($_SESSION['jill_booking_batch'][$key]);
         return $batch['jbi_sn'];
     }
@@ -420,8 +434,7 @@ class Jill_booking
             return _MD_JILLBOOKIN_BOOKED;
         }
         $event = trim((string) ($data['event'] ?? ''));
-        self::store($event === '' ? _MD_INDIVIDUAL_BOOKING : $event, $date, $date, $rows, true);
-        return '';
+        return self::store($event === '' ? _MD_INDIVIDUAL_BOOKING : $event, $date, $date, $rows, true) ? '' : _MD_JILLBOOKIN_BOOKED;
     }
 
     /********************* 區塊 *********************/

@@ -17,7 +17,7 @@
         <{foreach from=$dateweek item=dw}>
           <tr>
             <td>
-              <input type="checkbox" name="jb_date[<{$dw.jbt_sn}>][]" value="<{$dw.jb_date}>" aria-label="<{$dw.jb_date}> <{$dw.jbt_title}>" <{if !$dw.jb_exit}>checked<{/if}>>
+              <input type="checkbox" name="jb_date[<{$dw.jbt_sn}>][]" value="<{$dw.jb_date}>" aria-label="<{$dw.jb_date}> <{$dw.jbt_title}>" <{if !$dw.jb_exit}>checked<{/if}> <{if $dw.own}>disabled title="<{$smarty.const._MD_JILLBOOKIN_BOOKED_SELF}>"<{/if}>>
             </td>
             <td><{$dw.jb_date}></td>
             <td><{$dw.week}></td>
