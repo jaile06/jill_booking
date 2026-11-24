@@ -14,7 +14,7 @@
 
   <h3 class="visually-hidden"><{$smarty.const._MD_JILLBOOKIN_SMNAME1}></h3>
 
-  <select name="jbi_sn" id="jbi_sn" class="form-select mb-3 w-auto" onchange="location.href='<{$action|default:''}>?jbi_sn='+this.value" aria-label="<{$smarty.const._MD_JILLBOOKIN_CHOOSEITEM}>">
+  <select name="jbi_sn" id="jbi_sn" class="form-control form-select mb-3 w-auto" onchange="location.href='<{$action|default:''}>?jbi_sn='+this.value" aria-label="<{$smarty.const._MD_JILLBOOKIN_CHOOSEITEM}>">
     <option value=""><{$smarty.const._MD_JILLBOOKIN_CHOOSEITEM}></option>
     <{$item_opt|default:''}>
   </select>
