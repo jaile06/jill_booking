@@ -1,11 +1,11 @@
 <?php
 use Xmf\Request;
+use XoopsModules\Jill_booking\Jill_booking;
 use XoopsModules\Jill_booking\Tools;
 use XoopsModules\Tadtools\My97DatePicker;
 use XoopsModules\Tadtools\Utility;
 $GLOBALS['xoopsOption']['template_main'] = "booking_helper_adm_main.tpl";
 require_once __DIR__ . '/header.php';
-require_once dirname(__DIR__) . '/function.php';
 header('HTTP/1.1 200 OK');
 $xoopsLogger->activated = false;
 /*-----------執行動作判斷區----------*/
@@ -49,7 +49,7 @@ switch ($op) {
         die();
 
     case 'create_orders':
-        Tools::check_token(true);
+        Tools::xoops_security_check(true);
         $data = json_decode(file_get_contents("php://input"), true);
         $error = createOrders(is_array($data) ? $data : []);
         die(getJSONResponse(['result' => $error === '', 'msg' => $error]));
@@ -101,11 +101,8 @@ function createOrders($data)
     }
 
     $event = trim((string) ($data['event'] ?? ''));
-    $jb_sn = insert_jill_booking($event === '' ? _MD_INDIVIDUAL_BOOKING : $event, $jb_date, $jb_date);
-    foreach ($slots as $jbt_sn => $slot) {
-        insert_jill_booking_week($jb_sn, $jbt_sn, date('w', strtotime($jb_date)));
-        insert_jill_booking_date($jb_sn, $slot, $jb_date, true);
-    }
+    $rows = array_map(fn($slot) => [$slot, $jb_date], array_values($slots));
+    Jill_booking::store($event === '' ? _MD_INDIVIDUAL_BOOKING : $event, $jb_date, $jb_date, $rows, true);
     return '';
 }
 

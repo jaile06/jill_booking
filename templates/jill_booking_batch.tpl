@@ -65,7 +65,7 @@
               <tbody id="sort">
                 <{if $weektime|default:false}>
                   <{foreach from=$timeArr key=t item=time}>
-                    <tr id='tr_<{$data.jbt_sn}>'>
+                    <tr id='tr_<{$time.jbt_sn}>'>
                       <td  class="th_style"><{$time.jbt_title}></td>
                       <{section name=w start=0 loop=7}>
                         <{assign var="wk" value=$smarty.section.w.index}>
@@ -82,7 +82,6 @@
 
         <!--預約編號-->
         <input type='hidden' name="jbi_sn" value="<{$itemArr.jbi_sn}>">
-        <input type='hidden' name="max_date" value="<{$max_date|default:''}>">
 
           <{$token_form|default:''}>
 
@@ -157,8 +156,7 @@
       <div class="text-center">
         <{$token_form|default:''}>
         <input type="hidden" name="op" value="<{$next_op|default:''}>">
-        <input type="hidden" name="jb_sn" value="<{$jb_sn|default:''}>">
-        <input type="hidden" name="jbi_sn" value="<{$jbi_sn|default:''}>">
+        <input type="hidden" name="key" value="<{$batch_key|default:''}>">
         <button type="submit" class="btn btn-primary"><{$smarty.const._TAD_SAVE}></button>
       </div>
     </form>

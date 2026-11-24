@@ -21,29 +21,29 @@ switch ($op) {
         exit;
 
     case "delete_jill_booking_time":
-        Tools::check_token();
+        Tools::xoops_security_check();
         Jill_booking_time::destroy($jbt_sn, $jbi_sn);
         header("location: {$_SERVER['PHP_SELF']}?jbi_sn=$jbi_sn");
         exit;
 
     case "copy_time":
-        Tools::check_token();
+        Tools::xoops_security_check();
         Jill_booking_time::copy($jbi_sn, $to_jbi_sn);
         header("location: {$_SERVER['PHP_SELF']}?jbi_sn=$to_jbi_sn");
         exit;
 
     case "import_time":
-        Tools::check_token();
+        Tools::xoops_security_check();
         Jill_booking_time::import($jbi_sn, Request::getString('type'));
         header("location: {$_SERVER['PHP_SELF']}?jbi_sn=$jbi_sn");
         exit;
 
     case "change_enable":
-        Tools::check_token(true);
+        Tools::xoops_security_check(true);
         die(Jill_booking_time::toggle($jbt_sn, Request::getString('week', '', 'POST')));
 
     case "save_jbt_title":
-        Tools::check_token(true);
+        Tools::xoops_security_check(true);
         die(Jill_booking_time::save_title($jbt_sn));
 
     default:

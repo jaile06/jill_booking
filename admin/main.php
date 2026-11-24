@@ -28,14 +28,14 @@ switch ($op) {
         break;
 
     case "delete_jill_booking_item":
-        Tools::check_token();
+        Tools::xoops_security_check();
         Jill_booking_item::destroy($jbi_sn);
         header("location: {$_SERVER['PHP_SELF']}");
         exit;
 
     case "update_jill_booking_item_sort":
         $xoopsLogger->activated = false;
-        Tools::check_token(true);
+        Tools::xoops_security_check(true);
         die(Jill_booking_item::sort());
 
     default:

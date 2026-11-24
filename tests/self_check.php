@@ -38,5 +38,20 @@ check('不存在的時段', Tools::bookable(false, $day(1)), false);
 check('IN 佔位', Tools::marks([1, 2, 3]), '?,?,?');
 check('跳脫', Tools::esc('<b>"\''), '&lt;b&gt;&quot;&#039;');
 
+check('期間展開', Tools::dates_in('2026-12-01', '2026-12-15', ['2', '4']), ['2026-12-01', '2026-12-03', '2026-12-08', '2026-12-10', '2026-12-15']);
+check('同日展開', Tools::dates_in('2026-12-03', '2026-12-03', ['4']), ['2026-12-03']);
+check('跨月展開', Tools::dates_in('2026-12-31', '2027-01-01', ['4', '5']), ['2026-12-31', '2027-01-01']);
+foreach (range(0, 6) as $i) {
+    define("_MD_JILLBOOKIN_W$i", "W$i");
+}
+check('週曆起點', array_column(Tools::weekArr('2026-12-03'), 'd')[0], '2026-11-29');
+check('週曆星期日', array_column(Tools::weekArr('2026-11-29'), 'd'), ['2026-11-29', '2026-11-30', '2026-12-01', '2026-12-02', '2026-12-03', '2026-12-04', '2026-12-05']);
+
+require dirname(__DIR__) . '/class/Jill_booking_date.php';
+$row = fn($sn, $status) => ['jb_sn' => $sn, 'jb_status' => $status];
+check('代表：無', XoopsModules\Jill_booking\Jill_booking_date::main([]), null);
+check('代表：待審取最前', XoopsModules\Jill_booking\Jill_booking_date::main([$row(1, '0'), $row(2, '0')])['jb_sn'], 1);
+check('代表：已核准優先', XoopsModules\Jill_booking\Jill_booking_date::main([$row(1, '0'), $row(2, '1')])['jb_sn'], 2);
+
 echo $fail ? "$fail 項失敗\n" : "全部通過\n";
 exit($fail ? 1 : 0);

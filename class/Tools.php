@@ -26,7 +26,7 @@ class Tools
     }
 
     // ponytail: 不清除 token，同頁多次 AJAX 才能重用；到期由核心回收
-    public static function check_token($ajax = false)
+    public static function xoops_security_check($ajax = false)
     {
         if (!$GLOBALS['xoopsSecurity']->check(false)) {
             self::deny(_MD_JILLBOOKIN_TOKEN_FAIL, $ajax);
@@ -192,45 +192,47 @@ class Tools
         return $data;
     }
 
-    //週曆
-    public static function weekArr($getdate = "")
+    // 星期名稱，0 為星期日
+    public static function week_name($w)
     {
-        if (!$getdate) {
-            $getdate = date("Y-m-d");
-        }
+        return [_MD_JILLBOOKIN_W0, _MD_JILLBOOKIN_W1, _MD_JILLBOOKIN_W2, _MD_JILLBOOKIN_W3, _MD_JILLBOOKIN_W4, _MD_JILLBOOKIN_W5, _MD_JILLBOOKIN_W6][(int) $w];
+    }
 
-        //die($getdate);
-        //取得一周的第幾天,星期天開始0-6
-        $weekday = date("w", strtotime($getdate));
-        //一週開始日期
-        $week_start = date("Y-m-d", strtotime("$getdate -" . $weekday . " days"));
-        $week = array();
+    // 指定日期所在的一週，由星期日開始
+    public static function weekArr($date = '')
+    {
+        $date = $date ?: date('Y-m-d');
+        $sunday = strtotime("$date -" . date('w', strtotime($date)) . ' days');
+        $week = [];
         for ($i = 0; $i <= 6; $i++) {
-            $week[$i]['d'] = date("Y-m-d", strtotime("$week_start +" . $i . " days"));
-            $cweek = array(_MD_JILLBOOKIN_W0, _MD_JILLBOOKIN_W1, _MD_JILLBOOKIN_W2, _MD_JILLBOOKIN_W3, _MD_JILLBOOKIN_W4, _MD_JILLBOOKIN_W5, _MD_JILLBOOKIN_W6);
-            if (in_array(date("w", strtotime($week[$i]['d'])), array_keys($cweek))) {
-                $week[$i]['w'] = $cweek[$i];
-            }
+            $week[$i] = ['d' => date('Y-m-d', strtotime("+$i days", $sunday)), 'w' => self::week_name($i)];
         }
-        //die(var_export($week));
         return $week;
     }
 
-    //立即寄出
-    public static function send_now($email = "", $title = "", $content = "")
+    // 期間內符合星期的日期（含頭尾）
+    public static function dates_in($start, $end, array $weeks)
+    {
+        $dates = [];
+        for ($date = $start; $date <= $end; $date = date('Y-m-d', strtotime("$date +1 day"))) {
+            if (in_array(date('w', strtotime($date)), $weeks, true)) {
+                $dates[] = $date;
+            }
+        }
+        return $dates;
+    }
+
+    // 立即寄出；偏好設定關閉寄信時回傳 false
+    public static function send_now($email, $title, $content)
     {
         global $xoopsModuleConfig;
-        $msg = '';
-        if ($xoopsModuleConfig['can_send_mail']) {
-            $xoopsMailer = xoops_getMailer();
-            $xoopsMailer->multimailer->ContentType = 'text/html';
-            $xoopsMailer->addHeaders('MIME-Version: 1.0');
-
-            $msg .= ($xoopsMailer->sendMail($email, $title, $content, [])) ? "已寄發通知信給 {$email}" : "通知信寄發給 {$email} 失敗！";
-        } else {
-            $msg = '目前設定為不寄發通知，請設法告知預約者預約結果';
+        if (empty($xoopsModuleConfig['can_send_mail'])) {
+            return false;
         }
-        return $msg;
+        $xoopsMailer = xoops_getMailer();
+        $xoopsMailer->multimailer->ContentType = 'text/html';
+        $xoopsMailer->addHeaders('MIME-Version: 1.0');
+        return $xoopsMailer->sendMail($email, $title, $content, []);
     }
 
 }

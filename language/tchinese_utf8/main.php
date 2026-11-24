@@ -56,3 +56,5 @@ define("_MD_JILLBOOKIN_HAS_BOOKING", "已有預約，不能刪除，請改為停
 define("_MD_JILLBOOKIN_BOOKED", "時段已被預約");
 define("_MD_JILLBOOKIN_NO_ITEM", "無此場地");
 define("_MD_JILLBOOKIN_BAD_ITEM", "請填寫場地名稱與正確的啟用、停用日期");
+define("_MD_JILLBOOKIN_MAIL_TITLE", "Auto-Reply:%s於 %s %s 審核通過");
+define("_MD_JILLBOOKIN_MAIL_CONTENT", "%s於 %s 預約了%s:星期 %s %s審核通過");
