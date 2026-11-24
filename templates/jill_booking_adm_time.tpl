@@ -73,7 +73,7 @@
               <input type="text" name="jbt_title" id="jbt_title" class="form-control validate[required]" placeholder="<{$smarty.const._MA_JILLBOOKIN_JBT_TITLE}>" aria-label="<{$smarty.const._MA_JILLBOOKIN_JBT_TITLE}>">
             </td>
             <{foreach from=$weeks key=w item=week}>
-              <td class="text-center">
+              <td class="text-center align-middle">
                 <input type="checkbox" name="jbt_week[]" value="<{$w}>" aria-label="<{$week}>" <{if $w>0 && $w<6}>checked<{/if}>>
               </td>
             <{/foreach}>

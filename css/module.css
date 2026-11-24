@@ -33,3 +33,14 @@
 .jb_delete {
     color: #B3261E;
 }
+
+/* 時段、批次、預約助手的勾選框 */
+input[type="checkbox"][name^="jbt_week"],
+input[type="checkbox"][name^="jb_week"],
+input[type="checkbox"][name^="jb_date"],
+.checkbox input[type="checkbox"] {
+    width: 24px;
+    height: 24px;
+    vertical-align: middle;
+    cursor: pointer;
+}
