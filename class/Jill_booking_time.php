@@ -53,7 +53,8 @@ class Jill_booking_time
         $sweet_alert->render('delete_jill_booking_time_func', "{$_SERVER['PHP_SELF']}?op=delete_jill_booking_time&XOOPS_TOKEN_REQUEST=" . Tools::token() . "&jbi_sn=$jbi_sn&jbt_sn=", 'jbt_sn');
         $formValidator = new FormValidator('#myForm', true);
         $xoopsTpl->assign('formValidator_code', $formValidator->render());
-        $xoopsTpl->assign('jeditable_set', $jeditable->render());
+        // 沒有可編輯欄位時 Jeditable 會讀到未定義變數
+        $xoopsTpl->assign('jeditable_set', $jeditable->cols ? $jeditable->render() : '');
     }
 
     // 某場地的所有時段

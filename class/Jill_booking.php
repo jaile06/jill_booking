@@ -142,7 +142,10 @@ class Jill_booking
                     $bookingArr[$t][$wk] = $cell;
                 }
             }
-            $jeditable->render();
+            // 沒有可編輯欄位時 Jeditable 會讀到未定義變數
+            if ($jeditable->cols) {
+                $jeditable->render();
+            }
             $item['jbi_title'] = Tools::esc($item['jbi_title']);
             $item['jbi_desc'] = $item['jbi_desc'] === '' ? '' : $myts->displayTarea($item['jbi_desc'], 1, 1, 1, 1, 0);
             $xoopsTpl->assign('timeArr', $timeArr);
