@@ -15,6 +15,16 @@ Unzip the module and upload the jill booking directory to the modules
 2. Go to the backstage for module installation.
 
 [History Update]
+jill booking 4.0.0  2026-11-24 Release
+ =================================================
+1. Support XOOPS 2.5.11 and 2.7.4, PHP 8.3 or later
+2. Rewritten with PSR-4 static classes
+3. Fixed privilege, XSS, CSRF and orphan record problems
+4. Venues and time slots with bookings can no longer be deleted, disable them instead
+5. A user cannot book the same time slot twice
+6. Delete confirmation uses SweetAlert, better accessibility
+7. Dates use NULL, indexes added, upgrade can be run repeatedly
+
 jill booking 3.0  2024-11-11 Release
  =================================================
 1. Support XOOPS 2.5.11
