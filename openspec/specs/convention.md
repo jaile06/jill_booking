@@ -10,7 +10,9 @@
 | 命名空間 | `XoopsModules\Jill_booking\` |
 | XOOPS | 2.5.11 與 2.7.4，同一份程式碼 |
 | PHP | 8.3 以上 |
-| 相依 | TadTools 4.0.8 以上 |
+| 2.5.11 測試站 | `C:/my_xoops2511`（2.5.11-Stable，PHP 8.3.0，Smarty 3.1.48） |
+| 2.7.4 開發站 | `E:/my_xoops274` |
+| 相依 | TadTools 4.0.1 以上（2.5.11 站實裝 4.0.1，2.7.4 站 4.0.8；只用兩版共有的 API） |
 | 佈景 | 2.5.11 只支援 Bootstrap 5 |
 | 儲存引擎 | MyISAM，無交易 |
 
