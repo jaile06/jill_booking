@@ -5,22 +5,12 @@ if (!class_exists('XoopsModules\Jill_booking\Update')) {
 }
 function xoops_module_update_jill_booking($module, $old_version)
 {
-    Update::del_interface();
-    if (Update::chk_chk1()) {
-        Update::go_update1();
-    }
-
-    if (Update::chk_chk2()) {
-        Update::go_update2();
-    }
-    if (Update::chk_chk3()) {
-        Update::go_update3();
-    }
-    if (Update::chk_chk4()) {
-        Update::go_update4();
-    }
-    if (Update::chk_chk5()) {
-        Update::go_update5();
+    try {
+        Update::run();
+    } catch (\Exception $e) {
+        // TadTools 的訊息結尾帶檔案路徑，畫面上不顯示
+        $module->setErrors(htmlspecialchars(preg_replace('/ in \S.* on line \d+$/', '', $e->getMessage()), ENT_QUOTES, 'UTF-8'));
+        return false;
     }
     return true;
 }

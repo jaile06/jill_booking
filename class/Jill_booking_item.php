@@ -14,7 +14,7 @@ use XoopsModules\Tadtools\Utility;
 class Jill_booking_item
 {
     // 啟用中的條件；停用日當天仍可用
-    const ENABLED = "`jbi_enable`='1' AND `jbi_start`<=CURDATE() AND (`jbi_end`>=CURDATE() OR `jbi_end`='0000-00-00')";
+    const ENABLED = "`jbi_enable`='1' AND `jbi_start`<=CURDATE() AND (`jbi_end`>=CURDATE() OR `jbi_end` IS NULL)";
 
     // 場地列表
     public static function index()
@@ -36,6 +36,7 @@ class Jill_booking_item
         $xoopsTpl->assign('bar', $PageBar['bar']);
         $xoopsTpl->assign('action', $_SERVER['PHP_SELF']);
         $xoopsTpl->assign('all_content', $all_content);
+        $xoopsTpl->assign('orphans', Update::orphans());
         $xoopsTpl->assign('now_op', 'list_jill_booking_item');
     }
 
@@ -222,9 +223,8 @@ class Jill_booking_item
         $title = trim(Request::getText('jbi_title', '', 'POST'));
         $start = Request::getString('jbi_start', '', 'POST');
         $end = Request::getString('jbi_end', '', 'POST');
-        // 停用日的 0000-00-00 由階段 7 的升級改為 NULL
-        $end = $end === '' ? '0000-00-00' : $end;
-        if ($title === '' || !Tools::is_date($start) || ($end !== '0000-00-00' && (!Tools::is_date($end) || $end < $start))) {
+        $end = $end === '' ? null : $end; // NULL 代表不限
+        if ($title === '' || !Tools::is_date($start) || ($end !== null && (!Tools::is_date($end) || $end < $start))) {
             Tools::deny(_MD_JILLBOOKIN_BAD_ITEM);
         }
         $enable = Request::getInt('jbi_enable', 0, 'POST') === 1 ? '1' : '0';

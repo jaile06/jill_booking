@@ -22,7 +22,7 @@ foreach (['2026-12-01' => true, '2026-02-30' => false, '2026-1-1' => false, '' =
 
 $xoopsModuleConfig = ['max_bookingweek' => 4];
 $day = fn($n) => date('Y-m-d', strtotime("$n day"));
-$slot = ['jbt_week' => '0,1,2,3,4,5,6', 'jbi_enable' => '1', 'jbi_start' => $day(-10), 'jbi_end' => '0000-00-00'];
+$slot = ['jbt_week' => '0,1,2,3,4,5,6', 'jbi_enable' => '1', 'jbi_start' => $day(-10), 'jbi_end' => null];
 check('今天', Tools::bookable($slot, $day(0)), true);
 check('昨天', Tools::bookable($slot, $day(-1)), false);
 check('第四週最後一天', Tools::bookable($slot, $day(28)), true);

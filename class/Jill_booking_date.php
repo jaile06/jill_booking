@@ -14,9 +14,8 @@ class Jill_booking_date
         global $xoopsDB;
         $table = $xoopsDB->prefix('jill_booking_date');
         $status = ($approved ?? empty($slot['jbi_approval'])) ? '1' : '0';
-        // pass_date 的 0000-00-00 由階段 7 的升級改為 NULL
         Utility::query("INSERT INTO `$table` (`jb_sn`, `jb_date`, `jbt_sn`, `jb_waiting`, `jb_status`, `approver`, `pass_date`)
-            SELECT ?, ?, ?, COALESCE(MAX(`jb_waiting`), 0) + 1, ?, 0, '0000-00-00' FROM `$table` WHERE `jb_date`=? AND `jbt_sn`=?",
+            SELECT ?, ?, ?, COALESCE(MAX(`jb_waiting`), 0) + 1, ?, 0, NULL FROM `$table` WHERE `jb_date`=? AND `jbt_sn`=?",
             'isissi', [$jb_sn, $date, $slot['jbt_sn'], $status, $date, $slot['jbt_sn']]);
     }
 
@@ -182,7 +181,7 @@ class Jill_booking_date
                 FROM `' . $xoopsDB->prefix('jill_booking_date') . '` AS a
                 JOIN `' . $xoopsDB->prefix('jill_booking') . '` AS b ON a.`jb_sn`=b.`jb_sn`
                 JOIN `' . $xoopsDB->prefix('jill_booking_time') . '` AS c ON a.`jbt_sn`=c.`jbt_sn`
-                WHERE c.`jbi_sn`=' . (int) $jbi_sn . " AND a.`pass_date`='0000-00-00' AND a.`jb_date`>='" . date('Y-m-d') . "'
+                WHERE c.`jbi_sn`=' . (int) $jbi_sn . " AND a.`pass_date` IS NULL AND a.`jb_date`>='" . date('Y-m-d') . "'
                 ORDER BY a.`jb_date`, a.`jbt_sn`, b.`jb_booking_time`";
             $PageBar = Utility::getPageBar($sql, 20, 10);
             $result = Utility::query($PageBar['sql']);
@@ -247,7 +246,7 @@ class Jill_booking_date
         global $xoopsDB;
         $result = Utility::query('SELECT a.`pass_date`, b.`jb_uid` FROM `' . $xoopsDB->prefix('jill_booking_date') . '` AS a
             JOIN `' . $xoopsDB->prefix('jill_booking') . "` AS b ON b.`jb_sn`=a.`jb_sn`
-            WHERE a.`pass_date`!='0000-00-00' AND a.`jb_date`=? AND a.`jbt_sn`=? AND a.`jb_waiting`=1", 'si', [$date, $jbt_sn]);
+            WHERE a.`pass_date` IS NOT NULL AND a.`jb_date`=? AND a.`jbt_sn`=? AND a.`jb_waiting`=1", 'si', [$date, $jbt_sn]);
         $row = $xoopsDB->fetchRow($result);
         return $row ? $row[0] . _MD_JILLBOOKIN_HADPASS . \XoopsUser::getUnameFromId($row[1], 1) : '';
     }

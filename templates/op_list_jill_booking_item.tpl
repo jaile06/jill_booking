@@ -1,3 +1,13 @@
+<{if $orphans|default:false}>
+    <div class="alert alert-warning">
+        <{$smarty.const._MA_JILLBOOKIN_ORPHAN_TITLE}>
+        <ul class="mb-0">
+        <{foreach from=$orphans key=label item=count}>
+            <li><{$label}>: <{$count}></li>
+        <{/foreach}>
+        </ul>
+    </div>
+<{/if}>
 <{if $all_content|default:false}>
     <{if $jill_book_adm|default:false}>
         <script type="text/javascript">

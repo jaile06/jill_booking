@@ -3,160 +3,112 @@ namespace XoopsModules\Jill_booking;
 
 use XoopsModules\Tadtools\Utility;
 
-/*
-Update Class Definition
-You may not change or alter any portion of this comment or credits of
-supporting developers from this source code or any supporting source code
-which is considered copyrighted (c) material of the original comment or credit
-authors.
-This program is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- */
-/**
- * Module:  xSitemap
- *
- * @package      \module\xsitemap\class
- * @license      http://www.fsf.org/copyleft/gpl.html GNU public license
- * @copyright    https://xoops.org 2001-2017 &copy; XOOPS Project
- * @author       Mamba <mambax7@gmail.com>
- * @since        File available since version 1.54
- */
-/**
- * Class Update
- */
 class Update
 {
-    public static function del_interface()
+    // 查詢用索引：資料表 => [索引名, 欄位]
+    const INDEXES = [
+        'jill_booking' => ['jb_uid', '`jb_uid`'],
+        'jill_booking_date' => ['slot', '`jbt_sn`, `jb_date`'],
+        'jill_booking_time' => ['jbi_sn', '`jbi_sn`'],
+    ];
+
+    // 依現況逐項升級，可重複執行；失敗丟例外
+    public static function run()
     {
-        if (file_exists(XOOPS_ROOT_PATH . '/modules/jill_booking/interface_menu.php')) {
-            unlink(XOOPS_ROOT_PATH . '/modules/jill_booking/interface_menu.php');
+        $interface_menu = XOOPS_ROOT_PATH . '/modules/jill_booking/interface_menu.php';
+        if (is_file($interface_menu)) {
+            unlink($interface_menu);
+        }
+
+        // 舊資料有 0000-00-00，嚴格模式下連 ALTER 都會失敗，升級期間暫時放寬
+        $mode = Utility::query('SELECT @@SESSION.sql_mode')->fetch_row()[0];
+        Utility::query("SET SESSION sql_mode=''");
+        try {
+            self::old_columns();
+            self::null_date('jill_booking_item', 'jbi_end', '停用日期');
+            self::null_date('jill_booking_date', 'pass_date', '通過日期');
+            foreach (self::INDEXES as $table => [$name, $columns]) {
+                self::add_index($table, $name, $columns);
+            }
+        } finally {
+            Utility::query('SET SESSION sql_mode=?', 's', [$mode]);
         }
     }
 
-    //檢查jbi_end欄位是否Not Null
-    public static function chk_chk5()
+    // 3.0 以前的欄位修正
+    private static function old_columns()
     {
         global $xoopsDB;
-        // show columns from xx_jill_booking_item where `Null`='no' && `Field`='jbi_end'
-        $sql = "show columns from " . $xoopsDB->prefix("jill_booking_item") . " where `Null`='no' && `Field`='jbi_end'";
+        $date = $xoopsDB->prefix('jill_booking_date');
+        $item = $xoopsDB->prefix('jill_booking_item');
 
-        $result = Utility::query($sql);
-
-        if (empty($result->num_rows)) {
-            return true;
+        if (stripos(self::column('jill_booking_date', 'jbt_sn')['Extra'], 'auto_increment') !== false) {
+            Utility::query("ALTER TABLE `$date` MODIFY `jbt_sn` mediumint(8) unsigned NOT NULL COMMENT '時段編號'");
         }
-        return false;
-
-    }
-    //修正jbi_end欄位由Null改Not Null
-    public static function go_update5()
-    {
-        global $xoopsDB;
-        $sql = "ALTER TABLE " . $xoopsDB->prefix("jill_booking_item") . " CHANGE `jbi_end` `jbi_end` date NOT NULL  COMMENT '停用日期' AFTER `jbi_start` ";
-        Utility::query($sql);
-        return true;
-    }
-
-    //檢查jbt_sn欄位 自動遞增是否存在
-    public static function chk_chk1()
-    {
-        global $xoopsDB;
-        $sql = "show columns from " . $xoopsDB->prefix("jill_booking_date") . " where Extra='auto_increment' ";
-
-        $result = Utility::query($sql);
-        if (empty($result->num_rows)) {
-            return false;
+        if (stripos(self::column('jill_booking_item', 'jbi_approval')['Type'], 'enum') === 0) {
+            Utility::query("ALTER TABLE `$item` MODIFY `jbi_approval` varchar(255) NOT NULL COMMENT '審核人員'");
         }
-        return true;
-
-    }
-
-    //修正jbt_sn欄位，取消自動遞增
-    public static function go_update1()
-    {
-        global $xoopsDB;
-        $sql = "ALTER TABLE " . $xoopsDB->prefix("jill_booking_date") . " CHANGE `jbt_sn` `jbt_sn` mediumint(8) unsigned NOT NULL COMMENT '時段編號' AFTER `jb_date` ";
-        Utility::query($sql);
-        return true;
-    }
-
-    //檢查jbi_approval 欄位 enum('1','0')是否存在
-    public static function chk_chk2()
-    {
-        global $xoopsDB;
-        $sql = "show columns from " . $xoopsDB->prefix("jill_booking_item") . " where Field='jbi_approval' && Type='enum(\'0\',\'1\')' ";
-        $result = Utility::query($sql);
-        if (empty($result->num_rows)) {
-            return false;
+        if (!self::column('jill_booking_date', 'approver')) {
+            Utility::query("ALTER TABLE `$date` ADD `approver` mediumint(8) unsigned NOT NULL default 0 COMMENT '審核者'");
         }
-        return true;
-    }
-
-    //修正jbi_approval欄位，改為varchar(255)
-    public static function go_update2()
-    {
-        global $xoopsDB;
-        $sql = "ALTER TABLE " . $xoopsDB->prefix("jill_booking_item") . " CHANGE `jbi_approval` `jbi_approval` varchar(255) COLLATE 'utf8_general_ci' NOT NULL COMMENT '審核人員' AFTER `jbi_enable` ";
-        Utility::query($sql);
-        return true;
-    }
-
-    //檢查有無通過日期欄位
-    public static function chk_chk3()
-    {
-        global $xoopsDB;
-        $sql = "show columns from " . $xoopsDB->prefix("jill_booking_date") . " where Field='approver' ";
-        $result = Utility::query($sql);
-        if (empty($result->num_rows)) {
-            return true;
+        if (!self::column('jill_booking_date', 'pass_date')) {
+            Utility::query("ALTER TABLE `$date` ADD `pass_date` date DEFAULT NULL COMMENT '通過日期'");
+            // 過去的、已核准的，以及與已核准者同時段的候補，視為已處理
+            $now = date('Y-m-d');
+            Utility::query("UPDATE `$date` AS a LEFT JOIN `$date` AS b ON a.`jb_date`=b.`jb_date` AND a.`jbt_sn`=b.`jbt_sn` AND b.`jb_status`='1'
+                SET a.`pass_date`=? WHERE a.`jb_date`<? OR b.`jb_sn` IS NOT NULL", 'ss', [$now, $now]);
         }
-
-        return false;
-    }
-    //執行更新通過日期欄位
-    public static function go_update3()
-    {
-        global $xoopsDB;
-        $sql = "ALTER TABLE " . $xoopsDB->prefix("jill_booking_date") . " ADD `approver` mediumint(8) unsigned NOT NULL default 0";
-        Utility::query($sql);
-
-        return true;
     }
 
-    //檢查有無通過日期欄位
-    public static function chk_chk4()
+    // 日期欄位改為可 NULL，0000-00-00 轉成 NULL
+    private static function null_date($table, $column, $comment)
     {
         global $xoopsDB;
-        $sql = "show columns from " . $xoopsDB->prefix("jill_booking_date") . " where Field='pass_date' ";
-        $result = Utility::query($sql);
-        if (empty($result->num_rows)) {
-            return true;
+        $name = $xoopsDB->prefix($table);
+        if (self::column($table, $column)['Null'] === 'NO') {
+            Utility::query("ALTER TABLE `$name` MODIFY `$column` date DEFAULT NULL COMMENT '$comment'");
         }
-
-        return false;
+        Utility::query("UPDATE `$name` SET `$column`=NULL WHERE `$column`='0000-00-00'");
     }
 
-    //執行更新通過日期欄位
-    public static function go_update4()
+    private static function add_index($table, $index, $columns)
     {
         global $xoopsDB;
-        $sql = "ALTER TABLE " . $xoopsDB->prefix("jill_booking_date") . " ADD `pass_date` date NOT NULL ";
-        Utility::query($sql);
-
-        //正確抓取XOOPS時間
-        $now = date('Y-m-d', xoops_getUserTimestamp(time()));
-        //1.今天以前的2.今天起以後的，若jb_staus=1 3.今天起以後的，若jb_staus=0，節次相同，更新日期
-        $sql = "update " . $xoopsDB->prefix("jill_booking_date") . " set `pass_date`='{$now}' where jb_date<'{$now}' || (`jb_status`='1' && jb_date>='{$now}')";
-        Utility::query($sql);
-
-        $sql = "select  `jb_date`, `jbt_sn`  from " . $xoopsDB->prefix("jill_booking_date") . " where
-            `jb_status`='1' && jb_date>='{$now}'";
-        $result = Utility::query($sql);
-        while (list($jb_date, $jbt_sn) = $xoopsDB->fetchRow($result)) {
-            $sql2 = "update " . $xoopsDB->prefix("jill_booking_date") . " set `pass_date`='{$now}' where  `jb_date`='{$jb_date}' and `jbt_sn`='{$jbt_sn}'";
-            Utility::query($sql2);
+        $name = $xoopsDB->prefix($table);
+        if (!Utility::query("SHOW INDEX FROM `$name` WHERE `Key_name`='$index'")->num_rows) {
+            Utility::query("ALTER TABLE `$name` ADD INDEX `$index` ($columns)");
         }
-        return true;
+    }
+
+    private static function column($table, $column)
+    {
+        global $xoopsDB;
+        return Utility::query('SHOW COLUMNS FROM `' . $xoopsDB->prefix($table) . "` WHERE `Field`='$column'")->fetch_assoc();
+    }
+
+    // 孤兒與重複順位的筆數（只報告不刪除），沒有問題的項目不列
+    public static function orphans()
+    {
+        global $xoopsDB;
+        foreach (['main' => '', 'date' => '_date', 'week' => '_week', 'time' => '_time', 'item' => '_item'] as $key => $suffix) {
+            $t[$key] = '`' . $xoopsDB->prefix('jill_booking' . $suffix) . '`';
+        }
+        $lost = fn($a, $b, $key) => "FROM {$t[$a]} AS a LEFT JOIN {$t[$b]} AS b ON a.`$key`=b.`$key` WHERE b.`$key` IS NULL";
+        $checks = [
+            _MA_JILLBOOKIN_ORPHAN_DATE => $lost('date', 'main', 'jb_sn'),
+            _MA_JILLBOOKIN_ORPHAN_MAIN => $lost('main', 'date', 'jb_sn'),
+            _MA_JILLBOOKIN_ORPHAN_WEEK => $lost('week', 'main', 'jb_sn'),
+            _MA_JILLBOOKIN_ORPHAN_SLOT => $lost('date', 'time', 'jbt_sn'),
+            _MA_JILLBOOKIN_ORPHAN_TIME => $lost('time', 'item', 'jbi_sn'),
+            _MA_JILLBOOKIN_DUP_WAITING => "FROM (SELECT 1 FROM {$t['date']} GROUP BY `jb_date`, `jbt_sn`, `jb_waiting` HAVING COUNT(*)>1) AS a",
+        ];
+        $report = [];
+        foreach ($checks as $label => $from) {
+            $count = (int) Utility::query("SELECT COUNT(*) $from")->fetch_row()[0];
+            if ($count) {
+                $report[$label] = $count;
+            }
+        }
+        return $report;
     }
 }

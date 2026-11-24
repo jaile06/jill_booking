@@ -112,7 +112,7 @@ class Tools
     public static function item_range($item)
     {
         global $xoopsModuleConfig;
-        $end = empty($item['jbi_end']) || $item['jbi_end'] === '0000-00-00' ? '' : $item['jbi_end'];
+        $end = (string) $item['jbi_end'];
         if (!empty($xoopsModuleConfig['max_bookingweek'])) {
             $limit = date('Y-m-d', strtotime('+' . (int) $xoopsModuleConfig['max_bookingweek'] . ' week'));
             $end = $end === '' ? $limit : min($end, $limit);
