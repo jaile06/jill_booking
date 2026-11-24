@@ -12,12 +12,34 @@ class Update
         'jill_booking_time' => ['jbi_sn', '`jbi_sn`'],
     ];
 
+    // 已移除的舊檔，覆蓋式升級時會留在站上
+    const OLD_FILES = [
+        'interface_menu.php',
+        'function.php',
+        'class/Helper.php',
+        'templates/sub_jill_booking_item_form.tpl',
+        'templates/sub_list_jill_booking_item.tpl',
+        'templates/sub_show_one_jill_booking_item.tpl',
+        'images/admin/management.png',
+        'images/admin/xoopsmicrobutton.gif',
+        'images/blank_logo.png',
+        'images/down.png',
+        'images/edit.cur',
+        'images/icons/icon_more.gif',
+        'images/icons/off.png',
+        'images/left.png',
+        'images/right.png',
+        'images/up.png',
+    ];
+
     // 依現況逐項升級，可重複執行；失敗丟例外
     public static function run()
     {
-        $interface_menu = XOOPS_ROOT_PATH . '/modules/jill_booking/interface_menu.php';
-        if (is_file($interface_menu)) {
-            unlink($interface_menu);
+        foreach (self::OLD_FILES as $file) {
+            $path = dirname(__DIR__) . '/' . $file;
+            if (is_file($path)) {
+                @unlink($path); // 沒有寫入權限時留著也不影響執行
+            }
         }
 
         // 舊資料有 0000-00-00，嚴格模式下連 ALTER 都會失敗，升級期間暫時放寬
