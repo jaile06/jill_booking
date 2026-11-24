@@ -1,9 +1,9 @@
 <?php
 use XoopsModules\Jill_booking\Update;
 if (!class_exists('XoopsModules\Jill_booking\Update')) {
-    include dirname(__DIR__) . '/preloads/autoloader.php';
+    require dirname(__DIR__) . '/preloads/autoloader.php';
 }
-function xoops_module_update_jill_booking(&$module, $old_version)
+function xoops_module_update_jill_booking($module, $old_version)
 {
     Update::del_interface();
     if (Update::chk_chk1()) {

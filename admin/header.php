@@ -26,9 +26,10 @@ if (!isset($xoopsTpl) || !is_object($xoopsTpl)) {
 xoops_cp_header();
 
 // Define Stylesheet and JScript
+$bootstrap = $_SESSION['bootstrap'] ?? 5;
 $xoTheme->addStylesheet(XOOPS_URL . '/modules/tadtools/css/iconize.css');
 // $xoTheme->addStylesheet(XOOPS_URL . '/modules/tadtools/css/font-awesome/css/font-awesome.css');
-$xoTheme->addStylesheet(XOOPS_URL . "/modules/tadtools/css/xoops_adm{$_SESSION['bootstrap']}.css");
+$xoTheme->addStylesheet(XOOPS_URL . "/modules/tadtools/css/xoops_adm{$bootstrap}.css");
 $xoTheme->addStylesheet(XOOPS_URL . '/modules/' . $xoopsModule->getVar('dirname') . '/css/module.css');
 $xoTheme->addStylesheet(XOOPS_URL . '/modules/' . $xoopsModule->getVar('dirname') . '/css/admin.css');
-$jill_book_adm = true;
+$jill_book_adm = $_SESSION['jill_book_adm'] = true;

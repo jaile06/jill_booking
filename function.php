@@ -165,53 +165,6 @@ function delete_booking($jbt_sn, $jb_date, $jb_sn = 0)
     }
     return true;
 }
-/********************* XOOPS檢查身分函數 *********************/
-//檢查是否具有預約權限
-function booking_perm($mode = "booking_group")
-{
-    global $xoopsUser, $xoopsModuleConfig, $jill_book_adm;
-    $_SESSION['can_booking'] = false;
-    if ($xoopsUser) {
-        if ($jill_book_adm) {
-            return true;
-            exit;
-        }
-        $needle_groups = $xoopsUser->groups();
-        $haystack_groups = $xoopsModuleConfig[$mode];
-        foreach ($needle_groups as $key => $group) {
-            if (in_array($group, $haystack_groups)) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-//檢查是否具有審核權限
-function booking_approval()
-{
-    global $xoopsUser, $xoopsDB, $jill_book_adm;
-
-    $can_approval = false;
-    if ($xoopsUser) {
-        if ($jill_book_adm) {
-            return true;
-            exit;
-        }
-
-        $uid = $xoopsUser->uid();
-
-        $sql = 'SELECT `jbi_approval` FROM `' . $xoopsDB->prefix('jill_booking_item') . '` WHERE `jbi_enable` =?';
-        $result = Utility::query($sql, 's', ['1']);
-        while (list($jbi_approval) = $xoopsDB->fetchRow($result)) {
-            $jbi_approval_arr = explode(',', $jbi_approval);
-            if (in_array($uid, $jbi_approval_arr)) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
 /********************* 自訂函數 *********************/
 //取得批次預約日期
 function getdateArr($seed_weekday = "", $start_date = "", $end_date = "")

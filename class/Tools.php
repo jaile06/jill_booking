@@ -44,6 +44,44 @@ class Tools
         exit;
     }
 
+    // 每次請求重算權限，不快取，撤權才會立即生效
+    public static function get_session()
+    {
+        global $xoopsUser;
+        $_SESSION['jill_book_adm'] = $xoopsUser ? $xoopsUser->isAdmin() : false;
+        $_SESSION['can_booking'] = self::can_booking();
+        $_SESSION['Isapproval'] = self::is_any_approver();
+    }
+
+    // 是否具有預約權限
+    public static function can_booking()
+    {
+        global $xoopsUser, $xoopsModuleConfig;
+        if (!$xoopsUser) {
+            return false;
+        }
+        return $xoopsUser->isAdmin() || (bool) array_intersect($xoopsUser->groups(), (array) ($xoopsModuleConfig['booking_group'] ?? []));
+    }
+
+    // 是否為任一啟用場地的審核者（模組管理員視同）
+    public static function is_any_approver()
+    {
+        global $xoopsDB, $xoopsUser;
+        if (!$xoopsUser) {
+            return false;
+        }
+        if ($xoopsUser->isAdmin()) {
+            return true;
+        }
+        $result = Utility::query('SELECT `jbi_approval` FROM `' . $xoopsDB->prefix('jill_booking_item') . '` WHERE `jbi_enable`=?', 's', ['1']);
+        while ($row = $xoopsDB->fetchRow($result)) {
+            if (in_array((string) $xoopsUser->uid(), explode(',', (string) $row[0]), true)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // 是否為該場地的審核者（模組管理員視同）
     public static function is_approver($jbi_sn)
     {

@@ -5,7 +5,7 @@ use XoopsModules\Tadtools\SweetAlert;
 use XoopsModules\Tadtools\Utility;
 /*-----------引入檔案區--------------*/
 require_once __DIR__ . '/header.php';
-$xoopsOption['template_main'] = "jill_booking_listapproval.tpl";
+$GLOBALS['xoopsOption']['template_main'] = "jill_booking_listapproval.tpl";
 require_once XOOPS_ROOT_PATH . '/header.php';
 if (empty($_SESSION['Isapproval'])) {
     redirect_header(XOOPS_URL, 3, _MD_JILLBOOKIN_NOAPPROVAL);
@@ -44,10 +44,7 @@ switch ($op) {
 }
 
 /*-----------秀出結果區--------------*/
-$xoopsTpl->assign("toolbar", Utility::toolbar_bootstrap($interface_menu, false, $interface_icon));
-$xoopsTpl->assign('jill_book_adm', $jill_book_adm);
-$xoTheme->addStylesheet('modules/jill_booking/css/module.css');
-include_once XOOPS_ROOT_PATH . '/footer.php';
+require_once __DIR__ . '/footer.php';
 
 /*-----------功能函數區--------------*/
 //列出所有jill_booking資料

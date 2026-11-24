@@ -6,11 +6,8 @@ use XoopsModules\Tadtools\Utility;
 
 /*-----------引入檔案區--------------*/
 require_once __DIR__ . '/header.php';
-$xoopsOption['template_main'] = "jill_booking_index.tpl";
+$GLOBALS['xoopsOption']['template_main'] = "jill_booking_index.tpl";
 require_once XOOPS_ROOT_PATH . '/header.php';
-if (!class_exists('XoopsModules\Jill_booking\Tools')) {
-    require XOOPS_ROOT_PATH . '/modules/jill_booking/preloads/autoloader.php';
-}
 
 /*-----------執行動作判斷區----------*/
 $op = Request::getString('op');
@@ -72,10 +69,7 @@ switch ($op) {
 }
 
 /*-----------秀出結果區--------------*/
-$xoopsTpl->assign("toolbar", Utility::toolbar_bootstrap($interface_menu, false, $interface_icon));
-$xoopsTpl->assign('jill_book_adm', $jill_book_adm);
-$xoTheme->addStylesheet('modules/jill_booking/css/module.css');
-include_once XOOPS_ROOT_PATH . '/footer.php';
+require_once __DIR__ . '/footer.php';
 
 /*-----------功能函數區--------------*/
 function booking_table($jbi_sn = "", $getdate = "")

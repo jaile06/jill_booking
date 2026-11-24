@@ -3,9 +3,9 @@ use Xmf\Request;
 use XoopsModules\Tadtools\Tmt;
 use XoopsModules\Tadtools\Utility;
 
-$xoopsOption['template_main'] = 'jill_booking_adm_approval.tpl';
-include_once "header.php";
-include_once "../function.php";
+$GLOBALS['xoopsOption']['template_main'] = 'jill_booking_adm_approval.tpl';
+require_once __DIR__ . '/header.php';
+require_once dirname(__DIR__) . '/function.php';
 /*-----------執行動作判斷區----------*/
 $op = Request::getString('op');
 $jbi_sn = Request::getInt('jbi_sn');
@@ -27,7 +27,7 @@ switch ($op) {
 
 /*-----------秀出結果區--------------*/
 $xoopsTpl->assign("jill_book_adm", $jill_book_adm);
-include_once 'footer.php';
+require_once __DIR__ . '/footer.php';
 
 /*-----------功能函數區--------------*/
 function jbi_approval_form($jbi_sn = "")

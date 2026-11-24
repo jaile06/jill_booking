@@ -3,9 +3,9 @@ use Xmf\Request;
 use XoopsModules\Jill_booking\Tools;
 use XoopsModules\Tadtools\My97DatePicker;
 use XoopsModules\Tadtools\Utility;
-$xoopsOption['template_main'] = "booking_helper_adm_main.tpl";
-include_once "header.php";
-include_once "../function.php";
+$GLOBALS['xoopsOption']['template_main'] = "booking_helper_adm_main.tpl";
+require_once __DIR__ . '/header.php';
+require_once dirname(__DIR__) . '/function.php';
 header('HTTP/1.1 200 OK');
 $xoopsLogger->activated = false;
 /*-----------執行動作判斷區----------*/
@@ -60,7 +60,7 @@ switch ($op) {
 }
 
 $xoopsTpl->assign("jill_book_adm", $jill_book_adm);
-include_once 'footer.php';
+require_once __DIR__ . '/footer.php';
 
 /*-----------function區--------------*/
 

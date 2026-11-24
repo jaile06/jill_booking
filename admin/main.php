@@ -6,9 +6,9 @@ use XoopsModules\Tadtools\FormValidator;
 use XoopsModules\Tadtools\SweetAlert;
 use XoopsModules\Tadtools\Utility;
 
-$xoopsOption['template_main'] = 'jill_booking_adm_main.tpl';
-include_once "header.php";
-include_once "../function.php";
+$GLOBALS['xoopsOption']['template_main'] = 'jill_booking_adm_main.tpl';
+require_once __DIR__ . '/header.php';
+require_once dirname(__DIR__) . '/function.php';
 /*-----------執行動作判斷區----------*/
 $op = Request::getString('op');
 $jb_sn = Request::getInt('jb_sn');
@@ -61,7 +61,7 @@ switch ($op) {
 
 /*-----------秀出結果區--------------*/
 $xoopsTpl->assign("jill_book_adm", $jill_book_adm);
-include_once 'footer.php';
+require_once __DIR__ . '/footer.php';
 
 /*-----------功能函數區--------------*/
 
