@@ -68,12 +68,17 @@
 
           $.ajax({
               type: 'POST',
-              url: `${location.href}?op=create_orders`,
+              url: `${location.href}?op=create_orders&XOOPS_TOKEN_REQUEST=<{$token|default:''}>`,
               async: true,
               data: JSON.stringify({...data, event: eventInput.val(), values}),
               contentType: "application/json; charset=utf-8",
               dataType: "json",
+              error: xhr => msgBlock.text(xhr.responseText).show(),
               success: data => {
+                  if (!data.result) {
+                      msgBlock.text(data.msg).show();
+                      return;
+                  }
                   init();
                   getTimeBtn.hide();
                   // bookingDateInput.val(null);

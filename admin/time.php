@@ -1,5 +1,6 @@
 <?php
 use Xmf\Request;
+use XoopsModules\Jill_booking\Tools;
 use XoopsModules\Tadtools\FormValidator;
 use XoopsModules\Tadtools\Jeditable;
 use XoopsModules\Tadtools\SweetAlert;
@@ -22,34 +23,39 @@ switch ($op) {
 
 //新增資料
     case "insert_jill_booking_time":
-        $jbi_sn = insert_jill_booking_time();
+        Tools::check_token();
+        $jbi_sn = insert_jill_booking_time($jbi_sn);
         header("location: {$_SERVER['PHP_SELF']}?jbi_sn=$jbi_sn");
-        break;
+        exit;
 
     case "delete_jill_booking_time":
+        Tools::check_token();
+        if (get_booking_times($jbt_sn)) {
+            Tools::deny(_MD_JILLBOOKIN_HAS_BOOKING);
+        }
         delete_jill_booking_time($jbt_sn);
         header("location: {$_SERVER['PHP_SELF']}?jbi_sn=$jbi_sn");
-        break;
+        exit;
 
     case "copy_time":
+        Tools::check_token();
         copy_time($jbi_sn, $to_jbi_sn);
         header("location: {$_SERVER['PHP_SELF']}?op=list_jill_booking_time&jbi_sn={$to_jbi_sn}");
-        break;
+        exit;
 
     case "import_time":
-        import_time($jbi_sn, $_GET['type']);
+        Tools::check_token();
+        import_time($jbi_sn, Request::getString('type'));
         header("location: {$_SERVER['PHP_SELF']}?op=list_jill_booking_time&jbi_sn={$jbi_sn}");
-        break;
+        exit;
 
     case "change_enable":
-        $new_pic = change_enable($jbt_sn, $_POST['week']);
-        die($new_pic);
-        break;
+        Tools::check_token(true);
+        die(change_enable($jbt_sn, Request::getString('week', '', 'POST')));
 
     case "save_jbt_title":
-        save_jbt_title($jbt_sn);
-        die($_POST['value']);
-        break;
+        Tools::check_token(true);
+        die(Tools::esc(save_jbt_title($jbt_sn)));
 
     default:
         list_jill_booking_time($jbi_sn);
@@ -75,17 +81,21 @@ function jill_booking_time_max_sort($jbi_sn = "")
 }
 
 //新增資料到jill_booking_time中
-function insert_jill_booking_time()
+function insert_jill_booking_time($jbi_sn)
 {
     global $xoopsDB;
 
-    $week = implode(",", $_POST['jbt_week']);
+    $week = array_intersect(['0', '1', '2', '3', '4', '5', '6'], Request::getArray('jbt_week', [], 'POST'));
+    $jbt_title = trim(Request::getText('jbt_title', '', 'POST'));
+    if (!$week || $jbt_title === '' || !get_jill_booking_item($jbi_sn)) {
+        Tools::deny(_MD_JILLBOOKIN_BAD_DATA);
+    }
 
-    $jbt_sort = jill_booking_time_max_sort($_POST['jbi_sn']);
+    $jbt_sort = jill_booking_time_max_sort($jbi_sn);
     $sql = 'INSERT INTO `' . $xoopsDB->prefix('jill_booking_time') . '` (`jbi_sn`, `jbt_title`, `jbt_sort`, `jbt_week`) VALUES (?, ?, ?, ?)';
-    Utility::query($sql, 'isis', [$_POST['jbi_sn'], $_POST['jbt_title'], $jbt_sort, $week]);
+    Utility::query($sql, 'isis', [$jbi_sn, $jbt_title, $jbt_sort, implode(',', $week)]);
 
-    return $_POST['jbi_sn'];
+    return $jbi_sn;
 }
 
 //刪除jill_booking_time某筆資料資料
@@ -126,7 +136,7 @@ function list_jill_booking_time($jbi_sn = "")
         //過濾讀出的變數值
         $jbt_title = $myts->htmlSpecialChars($jbt_title);
 
-        $jeditable->setTextCol("#jbt_title_{$jbt_sn}", 'time.php', '100%', '11pt', "{'jbt_sn':$jbt_sn,'op' : 'save_jbt_title'}", _TAD_EDIT . _MA_JILLBOOKIN_JBT_TITLE);
+        $jeditable->setTextCol("#jbt_title_{$jbt_sn}", 'time.php', '100%', '11pt', "{'jbt_sn':$jbt_sn,'op' : 'save_jbt_title', 'XOOPS_TOKEN_REQUEST' : '" . Tools::token() . "'}", _TAD_EDIT . _MA_JILLBOOKIN_JBT_TITLE);
 
         $all_content[$i]['jbi_sn'] = $jbi_sn;
         $all_content[$i]['jbt_sn'] = $jbt_sn;
@@ -154,6 +164,7 @@ function list_jill_booking_time($jbi_sn = "")
     //die(var_export($all_content));
     //刪除確認的JS
 
+    $xoopsTpl->assign('token', Tools::token());
     $xoopsTpl->assign('item', $item);
     $xoopsTpl->assign('action', $_SERVER['PHP_SELF']);
     $xoopsTpl->assign('all_content', $all_content);
@@ -161,7 +172,7 @@ function list_jill_booking_time($jbi_sn = "")
     $xoopsTpl->assign('jbi_sn', $jbi_sn);
 
     $sweet_alert = new SweetAlert();
-    $sweet_alert->render('delete_jill_booking_time_func', "{$_SERVER['PHP_SELF']}?op=delete_jill_booking_time&jbi_sn=$jbi_sn&jbt_sn=", "jbt_sn");
+    $sweet_alert->render('delete_jill_booking_time_func', "{$_SERVER['PHP_SELF']}?op=delete_jill_booking_time&XOOPS_TOKEN_REQUEST=" . Tools::token() . "&jbi_sn=$jbi_sn&jbt_sn=", "jbt_sn");
 
     //套用formValidator驗證機制
     $formValidator = new FormValidator("#myForm", true);
@@ -204,18 +215,17 @@ function copy_time($jbi_sn = "", $to_jbi_sn = "")
     $sql = 'SELECT * FROM `' . $xoopsDB->prefix('jill_booking_time') . '` WHERE `jbi_sn` =?';
     $result = Utility::query($sql, 'i', [$jbi_sn]);
 
+    $rows = [];
     while ($all = $xoopsDB->fetchArray($result)) {
-        //以下會產生這些變數： $jbt_sn,$jbi_sn,$jbt_title,$jbt_sort
-        foreach ($all as $k => $v) {
-            $$k = $v;
-        }
-        $ins[] = "('{$to_jbi_sn}' , '{$jbt_title}' , '{$jbt_sort}','{$jbt_week}')";
+        $rows[] = $all;
     }
-
-    $ins_sql = implode(",", $ins);
-
-    $sql = 'INSERT INTO `' . $xoopsDB->prefix('jill_booking_time') . '` (`jbi_sn`, `jbt_title`, `jbt_sort`, `jbt_week`) VALUES' . $ins_sql;
-    Utility::query($sql);
+    if (!$rows || !get_jill_booking_item($to_jbi_sn)) {
+        Tools::deny(_MD_JILLBOOKIN_BAD_DATA);
+    }
+    $sql = 'INSERT INTO `' . $xoopsDB->prefix('jill_booking_time') . '` (`jbi_sn`, `jbt_title`, `jbt_sort`, `jbt_week`) VALUES (?, ?, ?, ?)';
+    foreach ($rows as $row) {
+        Utility::query($sql, 'isis', [$to_jbi_sn, $row['jbt_title'], $row['jbt_sort'], $row['jbt_week']]);
+    }
 }
 
 //從範本快速匯入時段設定
@@ -240,29 +250,25 @@ function import_time($jbi_sn = "", $type = "")
 }
 
 //改變啟用狀態
-function change_enable($jbt_sn = "", $week = "")
+function change_enable($jbt_sn, $week)
 {
     global $xoopsDB;
     $time = get_jill_booking_time($jbt_sn);
-    $jbt_week = strval($time['jbt_week']);
-    $week_arr = explode(',', $jbt_week);
-    if (in_array($week, $week_arr)) {
-        foreach ($week_arr as $w) {
-            if ($w != $week) {
-                $new_week[] = $w;
-            }
-        }
-        $new_week = implode(',', $new_week);
+    if (!$time || !in_array($week, ['0', '1', '2', '3', '4', '5', '6'], true)) {
+        Tools::deny(_MD_JILLBOOKIN_BAD_DATA, true);
+    }
+    $week_arr = array_filter(explode(',', (string) $time['jbt_week']), 'strlen');
+    if (in_array($week, $week_arr, true)) {
+        $week_arr = array_diff($week_arr, [$week]);
         $new_pic = "../images/no.gif";
     } else {
         $week_arr[] = $week;
         sort($week_arr);
-        $new_week = implode(',', $week_arr);
         $new_pic = "../images/yes.gif";
     }
 
     $sql = 'UPDATE `' . $xoopsDB->prefix('jill_booking_time') . '` SET `jbt_week`=? WHERE `jbt_sn`=?';
-    Utility::query($sql, 'si', [$new_week, $jbt_sn]);
+    Utility::query($sql, 'si', [implode(',', $week_arr), $jbt_sn]);
 
     return $new_pic;
 }
@@ -271,7 +277,9 @@ function save_jbt_title($jbt_sn)
 {
     global $xoopsDB;
 
-    $jbt_title = (string) $_POST['value'];
+    // jeditable 以 innerHTML 回填，送回的是跳脫後文字，存檔前還原
+    $jbt_title = htmlspecialchars_decode(Request::getText('value', '', 'POST'), ENT_QUOTES);
     $sql = 'UPDATE `' . $xoopsDB->prefix('jill_booking_time') . '` SET `jbt_title` = ? WHERE `jbt_sn` = ?';
     Utility::query($sql, 'si', [$jbt_title, $jbt_sn]);
+    return $jbt_title;
 }

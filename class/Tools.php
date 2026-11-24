@@ -5,6 +5,114 @@ use XoopsModules\Tadtools\Utility;
 
 class Tools
 {
+    // 輸出跳脫
+    public static function esc($value)
+    {
+        return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+    }
+
+    // 嚴格的 Y-m-d 檢查
+    public static function is_date($date)
+    {
+        $obj = \DateTime::createFromFormat('!Y-m-d', (string) $date);
+        return $obj && $obj->format('Y-m-d') === $date;
+    }
+
+    // 同一頁共用一個 token（供 AJAX 與連結）
+    public static function token()
+    {
+        static $token;
+        return $token ??= $GLOBALS['xoopsSecurity']->createToken();
+    }
+
+    // ponytail: 不清除 token，同頁多次 AJAX 才能重用；到期由核心回收
+    public static function check_token($ajax = false)
+    {
+        if (!$GLOBALS['xoopsSecurity']->check(false)) {
+            self::deny(_MD_JILLBOOKIN_TOKEN_FAIL, $ajax);
+        }
+    }
+
+    // 拒絕請求並結束
+    public static function deny($msg, $ajax = false)
+    {
+        if ($ajax) {
+            http_response_code(403);
+            die(self::esc($msg));
+        }
+        redirect_header($_SERVER['PHP_SELF'], 3, $msg);
+        exit;
+    }
+
+    // 是否為該場地的審核者（模組管理員視同）
+    public static function is_approver($jbi_sn)
+    {
+        global $xoopsDB, $xoopsUser;
+        if (!$xoopsUser) {
+            return false;
+        }
+        if ($xoopsUser->isAdmin()) {
+            return true;
+        }
+        $result = Utility::query('SELECT `jbi_approval` FROM `' . $xoopsDB->prefix('jill_booking_item') . '` WHERE `jbi_sn`=?', 'i', [(int) $jbi_sn]);
+        $row = $xoopsDB->fetchRow($result);
+        return $row && in_array((string) $xoopsUser->uid(), explode(',', (string) $row[0]), true);
+    }
+
+    // 時段及其場地
+    public static function slot($jbt_sn)
+    {
+        global $xoopsDB;
+        $result = Utility::query('SELECT t.*, i.`jbi_title`, i.`jbi_start`, i.`jbi_end`, i.`jbi_enable`, i.`jbi_approval`
+            FROM `' . $xoopsDB->prefix('jill_booking_time') . '` AS t
+            JOIN `' . $xoopsDB->prefix('jill_booking_item') . '` AS i ON t.`jbi_sn`=i.`jbi_sn`
+            WHERE t.`jbt_sn`=?', 'i', [(int) $jbt_sn]);
+        return $xoopsDB->fetchArray($result);
+    }
+
+    // 場地可預約的起訖日，迄日空字串代表不限
+    public static function item_range($item)
+    {
+        global $xoopsModuleConfig;
+        $end = empty($item['jbi_end']) || $item['jbi_end'] === '0000-00-00' ? '' : $item['jbi_end'];
+        if (!empty($xoopsModuleConfig['max_bookingweek'])) {
+            $limit = date('Y-m-d', strtotime('+' . (int) $xoopsModuleConfig['max_bookingweek'] . ' week'));
+            $end = $end === '' ? $limit : min($end, $limit);
+        }
+        return [max(date('Y-m-d'), (string) $item['jbi_start']), $end];
+    }
+
+    // 該日該時段可否預約；預約助手不限場地啟用期間與週數（$check_range = false）
+    public static function bookable($slot, $date, $check_range = true)
+    {
+        if (!$slot || !self::is_date($date) || $date < date('Y-m-d')) {
+            return false;
+        }
+        if (!in_array(date('w', strtotime($date)), explode(',', (string) $slot['jbt_week']), true)) {
+            return false;
+        }
+        if (!$check_range) {
+            return true;
+        }
+        [$start, $end] = self::item_range($slot);
+        return $slot['jbi_enable'] == '1' && $date >= $start && ($end === '' || $date <= $end);
+    }
+
+    // 場地是否已有預約
+    public static function item_has_booking($jbi_sn)
+    {
+        global $xoopsDB;
+        $result = Utility::query('SELECT COUNT(*) FROM `' . $xoopsDB->prefix('jill_booking_date') . '` AS a
+            JOIN `' . $xoopsDB->prefix('jill_booking_time') . '` AS b ON a.`jbt_sn`=b.`jbt_sn` WHERE b.`jbi_sn`=?', 'i', [(int) $jbi_sn]);
+        $row = $xoopsDB->fetchRow($result);
+        return !empty($row[0]);
+    }
+
+    // IN (?,?) 的佔位字串
+    public static function marks($arr)
+    {
+        return implode(',', array_fill(0, count($arr), '?'));
+    }
 
     //取得用了該日期時段的所有者
     public static function booking_users($jbt_sn = "", $jb_date = "")
@@ -23,15 +131,15 @@ class Tools
         if ($totalnum > 1) {
             $users = _MD_JILLBOOKIN_JB_UID . "<ol>";
             while ($all = $xoopsDB->fetchArray($result)) {
-                foreach ($all as $k => $v) {
-                    $$k = $v;
-                }
+                ['jb_status' => $jb_status, 'jb_booking_content' => $jb_booking_content, 'name' => $name] = $all;
                 //將是/否選項轉換為圖示
                 $jb_status = ($jb_status == 1) ? '<img src="' . XOOPS_URL . '/modules/jill_booking/images/yes.gif" alt="' . _MD_PASS . '" title="' . _MD_PASS . '">' : '<img src="' . XOOPS_URL . '/modules/jill_booking/images/no.gif" alt="' . _MD_APPROVING . '" title="' . _MD_APPROVING . '">';
                 //列出所有預約者資訊
-                $users .= "<li>{$name}{$jb_status}{$jb_booking_content}</li>";
+                $users .= '<li>' . self::esc($name) . $jb_status . self::esc($jb_booking_content) . '</li>';
             }
             $users .= "</ol>";
+            // qtip 會把屬性值當 HTML：內容先跳脫，再整段跳脫放進屬性
+            $users = self::esc($users);
             $usershtml .= " <a href='#' qtipOpts=\"{}\" qtip-content='$users' ><i class='fa fa-list'></i></a>";
         }
         return $usershtml;
@@ -111,11 +219,11 @@ class Tools
         global $xoopsModuleConfig;
         $msg = '';
         if ($xoopsModuleConfig['can_send_mail']) {
-            $xoopsMailer = &getMailer();
+            $xoopsMailer = xoops_getMailer();
             $xoopsMailer->multimailer->ContentType = 'text/html';
             $xoopsMailer->addHeaders('MIME-Version: 1.0');
 
-            $msg .= ($xoopsMailer->sendMail($email, $title, $content, $headers)) ? "已寄發通知信給 {$email}" : "通知信寄發給 {$email} 失敗！";
+            $msg .= ($xoopsMailer->sendMail($email, $title, $content, [])) ? "已寄發通知信給 {$email}" : "通知信寄發給 {$email} 失敗！";
         } else {
             $msg = '目前設定為不寄發通知，請設法告知預約者預約結果';
         }

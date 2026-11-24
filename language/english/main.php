@@ -49,3 +49,8 @@ define("_MD_PASS", "Pass");
 define("_MD_JILLBOOKIN_ITEM", "Field");
 define("_MD_UPDATE_COMPLETED", "Update completed");
 define("_MD_UPDATE_FAILED", "Update failed");
+define("_MD_JILLBOOKIN_TOKEN_FAIL", "The request expired or is invalid. Please reload the page.");
+define("_MD_JILLBOOKIN_NO_PERM", "You do not have permission to do this.");
+define("_MD_JILLBOOKIN_BAD_DATA", "Please choose a valid date and time slot.");
+define("_MD_JILLBOOKIN_HAS_BOOKING", "It has bookings and cannot be deleted. Please disable it instead.");
+define("_MD_JILLBOOKIN_BOOKED", "The time slot is already booked.");

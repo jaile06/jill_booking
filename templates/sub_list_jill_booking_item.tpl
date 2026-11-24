@@ -6,7 +6,7 @@
             $(document).ready(function(){
                 $("#jill_booking_item_sort").sortable({ opacity: 0.6, cursor: "move", update: function() {
                     var order = $(this).sortable("serialize");
-                    $.post("<{$xoops_url}>/modules/jill_booking/admin/main.php", order + "&op=update_jill_booking_item_sort", function(theResponse){
+                    $.post("<{$xoops_url}>/modules/jill_booking/admin/main.php", order + "&op=update_jill_booking_item_sort&XOOPS_TOKEN_REQUEST=<{$token|default:''}>", function(theResponse){
                     $("#jill_booking_item_save_msg").html(theResponse);
                     });
                 }

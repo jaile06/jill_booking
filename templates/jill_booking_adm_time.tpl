@@ -8,14 +8,14 @@
     $(document).ready(function(){
       $('#sort').sortable({ opacity: 0.6, cursor: 'move', update: function() {
         var order = $(this).sortable('serialize');
-        $.post('save_sort.php', order, function(theResponse){
+        $.post('save_sort.php', order + '&XOOPS_TOKEN_REQUEST=<{$token|default:''}>', function(theResponse){
           $('#save_msg').html(theResponse);
         });
       }
       });
     });
     function change_enable(jbt_sn,w){
-      $.post("time.php", {op: 'change_enable', jbt_sn: jbt_sn, week: w },
+      $.post("time.php", {op: 'change_enable', jbt_sn: jbt_sn, week: w, XOOPS_TOKEN_REQUEST: '<{$token|default:''}>' },
       function(data) {
         $('#'+jbt_sn+'_'+w).attr('src',data);
       });
@@ -151,6 +151,7 @@
             </td>
             <td>
               <input type="hidden" name="jbi_sn" value="<{$jbi_sn|default:''}>">
+              <input type="hidden" name="XOOPS_TOKEN_REQUEST" value="<{$token|default:''}>">
               <input type="hidden" name="op" value="insert_jill_booking_time">
               <button type="submit" class="btn  btn-outline-primary"><{$smarty.const._MA_JILLBOOKIN_ADD_TIME}></button>
             </td>
@@ -164,10 +165,10 @@
           <a href="#" class="list-group-item active">
             <{$smarty.const._MA_JILLBOOKIN_IMPORT}>
           </a>
-          <a href="time.php?op=import_time&jbi_sn=<{$jbi_sn|default:''}>&type=18" class="list-group-item"><{$smarty.const._MA_JILLBOOKIN_IMPORT_18}></a>
-          <a href="time.php?op=import_time&jbi_sn=<{$jbi_sn|default:''}>&type=apm" class="list-group-item"><{$smarty.const._MA_JILLBOOKIN_IMPORT_APM}></a>
+          <a href="time.php?op=import_time&jbi_sn=<{$jbi_sn|default:''}>&type=18&XOOPS_TOKEN_REQUEST=<{$token|default:''}>" class="list-group-item"><{$smarty.const._MA_JILLBOOKIN_IMPORT_18}></a>
+          <a href="time.php?op=import_time&jbi_sn=<{$jbi_sn|default:''}>&type=apm&XOOPS_TOKEN_REQUEST=<{$token|default:''}>" class="list-group-item"><{$smarty.const._MA_JILLBOOKIN_IMPORT_APM}></a>
           <{foreach from=$place_time item=place}>
-            <a href="time.php?op=copy_time&jbi_sn=<{$place.jbi_sn}>&to_jbi_sn=<{$jbi_sn|default:''}>" class="list-group-item"><{$place.jbi_link}></a>
+            <a href="time.php?op=copy_time&jbi_sn=<{$place.jbi_sn}>&to_jbi_sn=<{$jbi_sn|default:''}>&XOOPS_TOKEN_REQUEST=<{$token|default:''}>" class="list-group-item"><{$place.jbi_link}></a>
           <{/foreach}>
         </div>
       <{/if}>

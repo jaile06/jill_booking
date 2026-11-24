@@ -1,5 +1,6 @@
 <?php
 use Xmf\Request;
+use XoopsModules\Jill_booking\Tools;
 use XoopsModules\Tadtools\CkEditor;
 use XoopsModules\Tadtools\FormValidator;
 use XoopsModules\Tadtools\SweetAlert;
@@ -34,11 +35,16 @@ switch ($op) {
         break;
 
     case "delete_jill_booking_item":
+        Tools::check_token();
+        if (Tools::item_has_booking($jbi_sn)) {
+            Tools::deny(_MD_JILLBOOKIN_HAS_BOOKING);
+        }
         delete_jill_booking_item($jbi_sn);
         header("location: {$_SERVER['PHP_SELF']}");
         exit;
     //更新排序
     case "update_jill_booking_item_sort":
+        Tools::check_token(true);
         $msg = update_jill_booking_item_sort();
         die($msg);
 
@@ -153,8 +159,9 @@ function insert_jill_booking_item()
     }
 
     $jbi_sort = jill_booking_item_max_sort();
+    $_POST['jbi_end'] = empty($_POST['jbi_end']) ? '0000-00-00' : $_POST['jbi_end'];
     $sql = 'INSERT INTO `' . $xoopsDB->prefix('jill_booking_item') . '` (`jbi_title`, `jbi_desc`, `jbi_sort`, `jbi_start`, `jbi_end`, `jbi_enable`, `jbi_approval`) VALUES (?, ?, ?, ?, ?, ?, ?)';
-    Utility::query($sql, 'ssissss', [(string) $_POST['jbi_title'], (string) $_POST['jbi_desc'], $jbi_sort, (string) $_POST['jbi_start'], (string) $_POST['jbi_end'], (string) $_POST['jbi_enable'], (string) $_POST['jbi_approval']]);
+    Utility::query($sql, 'ssissss', [(string) $_POST['jbi_title'], (string) $_POST['jbi_desc'], $jbi_sort, (string) $_POST['jbi_start'], (string) $_POST['jbi_end'], (string) $_POST['jbi_enable'], (string) ($_POST['jbi_approval'] ?? '')]);
 
     //取得最後新增資料的流水編號
     $jbi_sn = $xoopsDB->getInsertId();
@@ -193,7 +200,7 @@ function update_jill_booking_item_sort()
 {
     global $xoopsDB;
     $sort = 1;
-    foreach ($_POST['tr'] as $jbi_sn) {
+    foreach (Request::getArray('tr', [], 'POST') as $jbi_sn) {
         $sql = 'UPDATE `' . $xoopsDB->prefix('jill_booking_item') . '` SET `jbi_sort`=? WHERE `jbi_sn`=?';
         Utility::query($sql, 'ii', [$sort, $jbi_sn]) or die(_TAD_SORT_FAIL . ' (' . date('Y-m-d H:i:s') . ')');
         $sort++;
@@ -208,8 +215,9 @@ function delete_jill_booking_item($jbi_sn = "")
         return;
     }
 
-    $sql = 'DELETE FROM `' . $xoopsDB->prefix('jill_booking_item') . '` WHERE `jbi_sn` = ?';
-    Utility::query($sql, 'i', [$jbi_sn]);
+    foreach (['jill_booking_time', 'jill_booking_item'] as $table) {
+        Utility::query('DELETE FROM `' . $xoopsDB->prefix($table) . '` WHERE `jbi_sn` = ?', 'i', [$jbi_sn]);
+    }
 
 }
 
@@ -226,6 +234,9 @@ function show_one_jill_booking_item($jbi_sn = "")
     $result = Utility::query($sql, 'i', [$jbi_sn]);
 
     $all = $xoopsDB->fetchArray($result);
+    if (!$all) {
+        Tools::deny(_MD_JILLBOOKIN_BAD_DATA);
+    }
 
     //以下會產生這些變數： $jbi_sn , $jbi_start , $jbi_end , $jbi_title , $jbi_desc , $jbi_approval , $jbi_sort , $jbi_enable
     foreach ($all as $k => $v) {
@@ -253,7 +264,7 @@ function show_one_jill_booking_item($jbi_sn = "")
     $xoopsTpl->assign('jbi_enable', $jbi_enable);
 
     $sweet_alert = new SweetAlert();
-    $sweet_alert->render('delete_jill_booking_item_func', "{$_SERVER['PHP_SELF']}?op=delete_jill_booking_item&jbi_sn=", "jbi_sn");
+    $sweet_alert->render('delete_jill_booking_item_func', "{$_SERVER['PHP_SELF']}?op=delete_jill_booking_item&XOOPS_TOKEN_REQUEST=" . Tools::token() . "&jbi_sn=", "jbi_sn");
 
     $xoopsTpl->assign('action', $_SERVER['PHP_SELF']);
     $xoopsTpl->assign('now_op', 'show_one_jill_booking_item');
@@ -318,8 +329,9 @@ function list_jill_booking_item()
 
     //刪除確認的JS
     $sweet_alert = new SweetAlert();
-    $sweet_alert->render('delete_jill_booking_item_func', "{$_SERVER['PHP_SELF']}?op=delete_jill_booking_item&jbi_sn=", "jbi_sn");
+    $sweet_alert->render('delete_jill_booking_item_func', "{$_SERVER['PHP_SELF']}?op=delete_jill_booking_item&XOOPS_TOKEN_REQUEST=" . Tools::token() . "&jbi_sn=", "jbi_sn");
     Utility::get_jquery(true);
+    $xoopsTpl->assign('token', Tools::token());
     $xoopsTpl->assign('bar', $bar);
     $xoopsTpl->assign('action', $_SERVER['PHP_SELF']);
     $xoopsTpl->assign('all_content', $all_content);

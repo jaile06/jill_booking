@@ -4,7 +4,7 @@
 <{if $now_op=="jill_booking_approvallist"}>
   <script type='text/javascript'>
     function update_jb_status_func(jb_sn,jb_date,jbt_sn,jbi_sn,i){
-      $.post("listapproval.php", {op: 'update_jb_status', jb_sn: jb_sn, jb_date: jb_date,jbt_sn: jbt_sn, jbi_sn: jbi_sn },
+      $.post("listapproval.php", {op: 'update_jb_status', jb_sn: jb_sn, jb_date: jb_date,jbt_sn: jbt_sn, jbi_sn: jbi_sn, XOOPS_TOKEN_REQUEST: '<{$token|default:''}>' },
       function(data) {
         if(data=='1'){
           $('#pass').addClass('col-sm-2 alert alert-success') ;
@@ -15,6 +15,8 @@
           $('#pass').addClass('span2 alert alert-danger') ;
           $('#pass').text('<{$smarty.const._MD_UPDATE_FAILED}>');
         }
+      }).fail(function(xhr) {
+        $('#pass').addClass('alert alert-danger').text(xhr.responseText);
       });
     }
   </script>

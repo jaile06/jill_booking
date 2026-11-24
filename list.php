@@ -1,5 +1,6 @@
 <?php
 use Xmf\Request;
+use XoopsModules\Jill_booking\Tools;
 use XoopsModules\Tadtools\SweetAlert;
 use XoopsModules\Tadtools\Utility;
 /*-----------引入檔案區--------------*/
@@ -16,12 +17,14 @@ $jbi_sn = Request::getInt('jbi_sn');
 switch ($op) {
 /*---判斷動作請貼在下方---*/
     case "delete_jill_booking":
-        $primaryArr = explode("_", $primary);
-        //jbi_sn=$primaryArr[0], jb_date=$primaryArr[1], jbt_sn=$primaryArr[2]
-        delete_booking($primaryArr[2], $primaryArr[1], $primaryArr[0]);
+        Tools::check_token();
+        //jbi_sn, jb_date, jbt_sn, jb_sn
+        $primaryArr = array_pad(explode("_", $primary), 4, '');
+        if (!(int) $primaryArr[3] || !delete_booking((int) $primaryArr[2], $primaryArr[1], (int) $primaryArr[3])) {
+            Tools::deny(_MD_JILLBOOKIN_NO_PERM);
+        }
         header("location: {$_SERVER['PHP_SELF']}");
         exit;
-        break;
 
     default:
         jill_booking_list($jbi_sn);
@@ -74,7 +77,7 @@ function jill_booking_list($def_jbi_sn = "")
         }
 
         //過濾讀出的變數值
-        $jb_booking_content = $myts->displayTarea($jb_booking_content, 1, 1, 0, 1, 0);
+        $jb_booking_content = Tools::esc($jb_booking_content);
         $jb_start_date = $myts->htmlSpecialChars($jb_start_date);
         $jb_end_date = $myts->htmlSpecialChars($jb_end_date);
 
@@ -82,7 +85,7 @@ function jill_booking_list($def_jbi_sn = "")
         $weekday = get_chinese_weekday($jb_date);
         $all_content[$i]['jb_date'] = $jb_date . $weekday;
         $all_content[$i]['jbt_sn'] = $jbt_sn;
-        $all_content[$i]['primary'] = $jbi_sn . "_" . $jb_date . "_" . $jbt_sn;
+        $all_content[$i]['primary'] = $jbi_sn . "_" . $jb_date . "_" . $jbt_sn . "_" . $jb_sn;
         $all_content[$i]['jb_waiting'] = $jb_waiting;
         $all_content[$i]['jb_status'] = $jb_status;
         $all_content[$i]['jb_uid'] = XoopsUser::getUnameFromId($jb_uid, 1);
@@ -108,7 +111,7 @@ function jill_booking_list($def_jbi_sn = "")
     $xoopsTpl->assign('now_op', 'jill_booking_list');
 
     $sweet_alert = new SweetAlert();
-    $sweet_alert->render('delete_jill_booking_func', "{$_SERVER['PHP_SELF']}?op=delete_jill_booking&primary=", "primary");
+    $sweet_alert->render('delete_jill_booking_func', "{$_SERVER['PHP_SELF']}?op=delete_jill_booking&XOOPS_TOKEN_REQUEST=" . Tools::token() . "&primary=", "primary");
 
 }
 function get_chinese_weekday($datetime)

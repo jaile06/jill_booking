@@ -4,15 +4,17 @@
 <{if $now_op=="booking_table"}>
   <script type='text/javascript'>
     function single_insert_booking(t,wk,jbt_sn,jb_date,jbi_sn){
-      $.post('<{$action|default:''}>', {op: 'single_insert_booking', jbt_sn: jbt_sn, jb_date: jb_date,jbi_sn:jbi_sn },
+      $.post('<{$action|default:''}>', {op: 'single_insert_booking', jbt_sn: jbt_sn, jb_date: jb_date,jbi_sn:jbi_sn, XOOPS_TOKEN_REQUEST: '<{$token|default:''}>' },
       function(data) {
         $('#submit'+t+'_'+wk).html(data).css('color','#000000');
+      }).fail(function(xhr) {
+        $('#submit'+t+'_'+wk).text(xhr.responseText).css('color','#D44950');
       });
     }
     function delete_booking(t,wk,jbt_sn,jb_date,jbi_sn){
       var sure = window.confirm("<{$smarty.const._TAD_DEL_CONFIRM}>");
       if (!sure)  return;
-      location.href="<{$action|default:''}>?op=delete_booking&jbt_sn=" + jbt_sn+"&jb_date="+jb_date+"&jbi_sn="+jbi_sn;
+      location.href="<{$action|default:''}>?op=delete_booking&jbt_sn=" + jbt_sn+"&jb_date="+jb_date+"&jbi_sn="+jbi_sn+"&XOOPS_TOKEN_REQUEST=<{$token|default:''}>";
     }
     $(document).ready(function(){
       //$('.users').popover({placement:'top',html:'true',trigger:'hover'});

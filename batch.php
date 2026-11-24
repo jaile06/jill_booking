@@ -21,21 +21,16 @@ switch ($op) {
 //新增資料
     case "insert_jill_booking":
         $sn = bath_insert();
-
         header("location: {$_SERVER['PHP_SELF']}?op=list_jill_booking&jb_sn={$sn['jb_sn']}&jbi_sn={$sn['jbi_sn']}");
-        break;
+        exit;
 
     case "insert_jill_booking_date":
-        $jbi_sn = insert_jill_booking_date($jb_sn, 0, $jbi_sn);
+        $jbi_sn = bath_insert_date($jb_sn);
         header("location:index.php?jbi_sn=$jbi_sn");
-        break;
+        exit;
 
     case "list_jill_booking":
         list_jill_booking($jb_sn, $jbi_sn);
-        break;
-
-    case "jill_booking_form":
-        jill_booking_form($jbt_sn, $jb_date);
         break;
 
     default:
@@ -63,6 +58,9 @@ function jill_booking_form($jbi_sn = "")
     if (!empty($jbi_sn)) {
         //場地資訊
         $itemArr = get_jill_booking_item($jbi_sn, 1);
+        if (!$itemArr) {
+            Tools::deny(_MD_JILLBOOKIN_BAD_DATA);
+        }
         $xoopsTpl->assign('itemArr', $itemArr);
 
         //預設值設定
@@ -124,47 +122,108 @@ function jill_booking_form($jbi_sn = "")
     $xoopsTpl->assign('now_op', 'jill_booking_form');
     $xoopsTpl->assign('action', $_SERVER["PHP_SELF"]);
 }
-//批次寫入
+//批次寫入第一步：主檔與星期
 function bath_insert()
 {
-    //XOOPS表單安全檢查
-    if (!$GLOBALS['xoopsSecurity']->check()) {
-        $error = implode("<br />", $GLOBALS['xoopsSecurity']->getErrors());
-        redirect_header($_SERVER['PHP_SELF'], 3, $error);
+    Utility::xoops_security_check();
+    if (empty($_SESSION['can_booking'])) {
+        Tools::deny(_MD_JILLBOOKIN_NO_PERM);
     }
-    $jb_sn = insert_jill_booking($jbt_sn);
-    foreach ($_POST['jb_week'] as $jbt_sn => $jb_week) {
-        insert_jill_booking_week($jb_sn, $jbt_sn, "", $jb_week);
+    $jbi_sn = Request::getInt('jbi_sn', 0, 'POST');
+    $item = get_jill_booking_item($jbi_sn, 1);
+    $start = Request::getString('jb_start_date', '', 'POST');
+    $end = Request::getString('jb_end_date', '', 'POST');
+
+    // 只收本場地開放的時段與星期
+    $weeks = [];
+    foreach (Request::getArray('jb_week', [], 'POST') as $jbt_sn => $jb_week) {
+        $slot = Tools::slot($jbt_sn);
+        if ($slot && $slot['jbi_sn'] == $jbi_sn) {
+            foreach (array_intersect((array) $jb_week, explode(',', (string) $slot['jbt_week'])) as $week) {
+                $weeks[] = [(int) $jbt_sn, (int) $week];
+            }
+        }
     }
-    $sn['jb_sn'] = $jb_sn;
-    $sn['jbi_sn'] = (int) $_POST['jbi_sn'];
-    return $sn;
+    if (!$item || !$weeks || !Tools::is_date($start) || !Tools::is_date($end)) {
+        Tools::deny(_MD_JILLBOOKIN_BAD_DATA);
+    }
+    [$min, $max] = Tools::item_range($item);
+    // ponytail: 場地不限迄日時批次最多一年，避免一次展開過多日期
+    $max = $max === '' ? date('Y-m-d', strtotime('+1 year')) : $max;
+    $start = max($start, $min);
+    $end = min($end, $max);
+    if ($start > $end) {
+        Tools::deny(_MD_JILLBOOKIN_BAD_DATA);
+    }
+
+    $content = trim(Request::getText('jb_booking_content', '', 'POST'));
+    $jb_sn = insert_jill_booking($content === '' ? _MD_JILLBOOKIN_SMNAME2 : $content, $start, $end);
+    foreach ($weeks as [$jbt_sn, $week]) {
+        insert_jill_booking_week($jb_sn, $jbt_sn, $week);
+    }
+    return ['jb_sn' => $jb_sn, 'jbi_sn' => $jbi_sn];
 }
+
+//取得本人的批次主檔，不是本人的就拒絕
+function get_own_booking($jb_sn)
+{
+    global $xoopsUser;
+    $booking = get_jill_booking($jb_sn);
+    if (!$xoopsUser || empty($_SESSION['can_booking']) || !$booking || $booking['jb_uid'] != $xoopsUser->uid()) {
+        Tools::deny(_MD_JILLBOOKIN_NO_PERM);
+    }
+    return $booking;
+}
+
+//批次寫入第二步：明細
+function bath_insert_date($jb_sn)
+{
+    Utility::xoops_security_check();
+    $booking = get_own_booking($jb_sn);
+    $weekArr = get_booking_weekArr($jb_sn);
+    $jbi_sn = 0;
+    foreach (Request::getArray('jb_date', [], 'POST') as $jbt_sn => $dates) {
+        $slot = Tools::slot($jbt_sn);
+        foreach ((array) $dates as $jb_date) {
+            if (!Tools::bookable($slot, $jb_date) || $jb_date < $booking['jb_start_date'] || $jb_date > $booking['jb_end_date']) {
+                continue;
+            }
+            // 只收第一步選過的時段與星期
+            foreach ($weekArr['rows'] as $row) {
+                if ($row['jbt_sn'] == $jbt_sn && $row['jb_week'] == date('w', strtotime($jb_date))) {
+                    insert_jill_booking_date($jb_sn, $slot, $jb_date);
+                    $jbi_sn = (int) $slot['jbi_sn'];
+                }
+            }
+        }
+    }
+    if (!$jbi_sn) {
+        Tools::deny(_MD_JILLBOOKIN_BAD_DATA);
+    }
+    return $jbi_sn;
+}
+
 //列出所有批次預約表單
 function list_jill_booking($jb_sn = "", $jbi_sn = "")
 {
     global $xoopsDB, $xoopsTpl;
-    if (empty($jb_sn)) {
-        return;
-    }
-
-    //取得jill_booking
-    $DBV1 = get_jill_booking($jb_sn);
+    $DBV1 = get_own_booking($jb_sn);
     $DBV2 = get_booking_weekArr($jb_sn);
-    //die(var_export($DBV2['jbt_sn']));
     //可啟用場地資訊
     $itemArr = get_jill_booking_item($jbi_sn, 1);
-    //die(var_export($itemArr));
+    if (!$itemArr || !$DBV2['rows']) {
+        Tools::deny(_MD_JILLBOOKIN_BAD_DATA);
+    }
     $xoopsTpl->assign("jbi_title", $itemArr['jbi_title']);
     $xoopsTpl->assign("jbi_sn", $jbi_sn);
 
     $i = 0;
-    $str_jbt_sn = implode(",", $DBV2['jbt_sn']);
-    $maxwaiting = get_maxwaiting_byrange($DBV1['jb_start_date'], $DBV1['jb_end_date'], $str_jbt_sn);
+    $dateweek = [];
+    $maxwaiting = get_maxwaiting_byrange($DBV1['jb_start_date'], $DBV1['jb_end_date'], $DBV2['jbt_sn']);
 
     $xoopsTpl->assign("maxwaiting", $maxwaiting);
 
-    foreach ($DBV2 as $k => $jb_weekArr) {
+    foreach ($DBV2['rows'] as $jb_weekArr) {
         //die($jb_weekArr['jb_week']);
         //$jb_weekArr['jbt_sn'];
         if (isset($jb_weekArr['jb_week']) && isset($jb_weekArr['jbt_sn'])) {
@@ -211,14 +270,15 @@ function list_jill_booking($jb_sn = "", $jbi_sn = "")
         }
 
     }
-    if (is_array($dateArr) && !empty($dateArr)) {
+    if ($dateweek) {
+        $jb_date = [];
         foreach ($dateweek as $key => $value) {
             $jb_date[$key] = strtotime($value['jb_date']);
         }
         array_multisort($jb_date, $dateweek);
     }
 
-    //die(var_export($dateweek));
+    Utility::token_form();
     $xoopsTpl->assign("jb_sn", $jb_sn);
     $xoopsTpl->assign("dateweek", $dateweek);
     $xoopsTpl->assign('now_op', 'list_jill_booking');
@@ -244,41 +304,28 @@ function get_jbwaiting($jbt_sn = "", $jb_date = "")
     return $data;
 }
 //依日期範圍取得jill_booking候補值
-function get_maxwaiting_byrange($jb_start_date = "", $jb_end_date = "", $str = "")
+function get_maxwaiting_byrange($jb_start_date, $jb_end_date, array $jbt_sns)
 {
     global $xoopsDB;
-    $where = ($jb_end_date == '0000-00-00') ? 'WHERE `jbt_sn` IN(?) AND `jb_date` >= ?' : 'WHERE `jbt_sn` IN(?) AND (`jb_date` BETWEEN ? AND ?)';
-    $sql = 'SELECT MAX(`jb_waiting`) FROM `' . $xoopsDB->prefix('jill_booking_date') . '` ' . $where;
-    $params = ($jb_end_date == '0000-00-00') ? ['ss', [$str, $jb_start_date]] : ['sss', [$str, $jb_start_date, $jb_end_date]];
-    $result = Utility::query($sql, ...$params);
+    $sql = 'SELECT MAX(`jb_waiting`) FROM `' . $xoopsDB->prefix('jill_booking_date') . '` WHERE `jbt_sn` IN(' . Tools::marks($jbt_sns) . ') AND `jb_date` BETWEEN ? AND ?';
+    $result = Utility::query($sql, str_repeat('i', count($jbt_sns)) . 'ss', [...$jbt_sns, $jb_start_date, $jb_end_date]);
 
     list($max) = $xoopsDB->fetchRow($result);
-    return $max;
+    return (int) $max;
 }
 
 //以流水號取得某筆jill_booking_week資料
-function get_booking_weekArr($jb_sn = "")
+function get_booking_weekArr($jb_sn)
 {
     global $xoopsDB;
-    if (empty($jb_sn)) {
-        return;
-    }
-
     $sql = 'SELECT * FROM `' . $xoopsDB->prefix('jill_booking_week') . '` WHERE `jb_sn` =?';
     $result = Utility::query($sql, 'i', [$jb_sn]);
 
-    $data = array();
-    $i = 0;
+    $data = ['rows' => [], 'jbt_sn' => []];
     while ($all = $xoopsDB->fetchArray($result)) {
-        foreach ($all as $k => $v) {
-            $$k = $v;
-        }
-        $data[$i]['jb_sn'] = $jb_sn;
-        $data[$i]['jb_week'] = $jb_week;
-        $data[$i]['jbt_sn'] = $jbt_sn;
-        $data['jbt_sn'][] = $jbt_sn;
-        $data['jbt_sn'] = array_unique($data['jbt_sn']);
-        ++$i;
+        $data['rows'][] = $all;
+        $data['jbt_sn'][$all['jbt_sn']] = (int) $all['jbt_sn'];
     }
+    $data['jbt_sn'] = array_values($data['jbt_sn']);
     return $data;
 }

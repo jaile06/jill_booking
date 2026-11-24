@@ -1,4 +1,5 @@
 <?php
+use XoopsModules\Jill_booking\Tools;
 use XoopsModules\Tadtools\Utility;
 xoops_loadLanguage('main', 'tadtools');
 
@@ -73,103 +74,39 @@ function get_jill_booking_time($jbt_sn = "")
     $data = $xoopsDB->fetchArray($result);
     return $data;
 }
-//取得用了該日期時段的uid
-function get_bookingArr($jbt_sn = "", $jb_date = "")
-{
-    global $xoopsDB, $xoopsUser, $jill_book_adm;
-    if (!isset($xoopsUser)) {
-        return;
-    }
-
-    $uid = $xoopsUser->uid();
-    $where = ($_SESSION['Isapproval'] or $jill_book_adm) ? "WHERE a.`jbt_sn`=? AND a.`jb_date`=? " : "WHERE a.`jbt_sn`=? AND a.`jb_date`=? AND b.`jb_uid`=?";
-
-    $sql = 'SELECT a.`jb_waiting`, b.`jb_sn`, b.`jb_uid`, b.`jb_booking_time`, b.`jb_booking_content`, b.`jb_start_date`, b.`jb_end_date`
-            FROM `' . $xoopsDB->prefix('jill_booking_date') . '` AS a
-            JOIN `' . $xoopsDB->prefix('jill_booking') . '` AS b
-            ON a.`jb_sn`=b.`jb_sn` ' . $where . '
-            ORDER BY a.`jb_waiting`';
-    $params = ($_SESSION['Isapproval'] or $jill_book_adm) ? ['is', [$jbt_sn, $jb_date]] : ['isi', [$jbt_sn, $jb_date, $uid]];
-    $result = Utility::query($sql, ...$params);
-
-    $data = $xoopsDB->fetchArray($result);
-    //die(var_export($data));
-    return $data;
-}
 //新增資料到jill_booking中
-function insert_jill_booking($single = "")
+function insert_jill_booking($content, $start_date, $end_date)
 {
     global $xoopsDB, $xoopsUser;
-    //取得使用者編號
-    $uid = $xoopsUser->uid();
-
-    if ($single == 1) {
-        $jb_booking_content = _MD_INDIVIDUAL_BOOKING;
-    } else {
-        $jb_booking_content = empty($_POST['jb_booking_content']) ? _MD_JILLBOOKIN_SMNAME2 : $_POST['jb_booking_content'];
-    }
-
-    $jb_start_date = ($single == 1) ? $_POST['jb_date'] : $_POST['jb_start_date'];
-    if ($single == 1) {
-        $jb_end_date = (string) $_POST['jb_date'];
-    } else {
-        $endtime = (string) $_POST['jb_end_date'];
-        $max_date = (string) $_POST['max_date'];
-        $jb_end_date = (strtotime($max_date) < strtotime($endtime)) ? $max_date : $endtime;
-    }
-    // $jb_week = ($single == 1) ? date("w", strtotime($_POST['jb_date'])) : $jb_weekArr;
-    //新增到jill_booking
     $sql = 'INSERT INTO `' . $xoopsDB->prefix('jill_booking') . '` (`jb_uid`, `jb_booking_time`, `jb_booking_content`, `jb_start_date`, `jb_end_date`) VALUES (?, ?, ?, ?, ?)';
-    Utility::query($sql, 'issss', [$uid, date('Y-m-d H:i:s', xoops_getUserTimestamp(time())), $jb_booking_content, $jb_start_date, $jb_end_date]);
-
-    //取得最後新增資料的流水編號
-    $jb_sn = $xoopsDB->getInsertId();
-    return $jb_sn;
+    Utility::query($sql, 'issss', [$xoopsUser->uid(), date('Y-m-d H:i:s', xoops_getUserTimestamp(time())), $content, $start_date, $end_date]);
+    return $xoopsDB->getInsertId();
 }
+
 //新增資料到jill_booking_week中
-function insert_jill_booking_week($jb_sn = "", $jbt_sn = "", $single = "", $jb_week = "")
+function insert_jill_booking_week($jb_sn, $jbt_sn, $week)
 {
     global $xoopsDB;
-    if (empty($jbt_sn) or empty($jb_sn)) {
-        return;
-    }
-
-    //die(var_export($jb_week));
-    //新增到jill_booking_week
-    foreach ($jb_week as $key => $week) {
-        $sql = 'INSERT INTO `' . $xoopsDB->prefix('jill_booking_week') . '` (`jb_sn`, `jb_week`, `jbt_sn`) VALUES (?, ?, ?)';
-        Utility::query($sql, 'iii', [$jb_sn, $week, $jbt_sn]);
-    }
+    $sql = 'INSERT IGNORE INTO `' . $xoopsDB->prefix('jill_booking_week') . '` (`jb_sn`, `jb_week`, `jbt_sn`) VALUES (?, ?, ?)';
+    Utility::query($sql, 'iii', [$jb_sn, $week, $jbt_sn]);
 }
-//新增資料到jill_booking中
-function insert_jill_booking_date($jb_sn = "", $single = "", $jbi_sn = "")
+
+//新增一筆預約明細；$approved 為 null 時依場地是否需審核決定
+function insert_jill_booking_date($jb_sn, $slot, $jb_date, $approved = null)
 {
-    global $xoopsDB, $xoopsUser;
-    if (empty($jb_sn)) {
+    global $xoopsDB;
+    $table = $xoopsDB->prefix('jill_booking_date');
+    $result = Utility::query("SELECT 1 FROM `$table` WHERE `jb_sn`=? AND `jb_date`=? AND `jbt_sn`=?", 'isi', [$jb_sn, $jb_date, $slot['jbt_sn']]);
+    if ($xoopsDB->fetchRow($result)) {
         return;
     }
-    $itemArr = get_jill_booking_item($jbi_sn, 1);
-
-    $jb_status = (empty($itemArr['jbi_approval'])) ? 1 : 0;
-    //新增到jill_booking_date
-    if ($single == 1) {
-        $jb_waiting = jb_waiting_max_sort($_POST['jb_date'], $_POST['jbt_sn']);
-
-        $sql = 'INSERT INTO `' . $xoopsDB->prefix('jill_booking_date') . '` (`jb_sn`, `jb_date`, `jbt_sn`, `jb_waiting`, `jb_status`, `approver`, `pass_date`) VALUES (?, ?, ?, ?, ?, ?, ?)';
-        Utility::query($sql, 'isiisis', [$jb_sn, $_POST['jb_date'], $_POST['jbt_sn'], $jb_waiting, $jb_status, 0, '000-00-00']);
-        //return $xoopsUser->name();
-    } else {
-        foreach ($_POST['jb_date'] as $jbt_sn => $dateArr) {
-            foreach ($dateArr as $jb_date) {
-                $jb_waiting = jb_waiting_max_sort($jb_date, $jbt_sn);
-
-                $sql = 'INSERT INTO `' . $xoopsDB->prefix('jill_booking_date') . '` (`jb_sn`, `jb_date`, `jbt_sn`, `jb_waiting`, `jb_status`, `approver`, `pass_date`) VALUES(?, ?, ?, ?, ?,?,?)';
-                Utility::query($sql, 'ssiisis', [$jb_sn, $jb_date, $jbt_sn, $jb_waiting, $jb_status, 0, '000-00-00']);
-            }
-        }
-        return $_POST['jbi_sn'];
-    }
+    $status = ($approved ?? empty($slot['jbi_approval'])) ? '1' : '0';
+    $jb_waiting = jb_waiting_max_sort($jb_date, $slot['jbt_sn']);
+    // pass_date 的 0000-00-00 由階段 7 的升級改為 NULL
+    $sql = "INSERT INTO `$table` (`jb_sn`, `jb_date`, `jbt_sn`, `jb_waiting`, `jb_status`, `approver`, `pass_date`) VALUES (?, ?, ?, ?, ?, 0, '0000-00-00')";
+    Utility::query($sql, 'isiis', [$jb_sn, $jb_date, $slot['jbt_sn'], $jb_waiting, $status]);
 }
+
 //自動取得jill_booking候補值
 function jb_waiting_max_sort($jb_date = "", $jbt_sn = "")
 {
@@ -178,92 +115,55 @@ function jb_waiting_max_sort($jb_date = "", $jbt_sn = "")
     $result = Utility::query($sql, 'si', [$jb_date, $jbt_sn]);
 
     list($sort) = $xoopsDB->fetchRow($result);
-    return ++$sort;
+    return (int) $sort + 1;
 }
 
-//刪除jill_booking某筆資料資料
-function delete_jill_booking($jb_sn = "")
+//取消預約：場地審核者可取消該場地任一筆，其他人只能取消自己的
+function delete_booking($jbt_sn, $jb_date, $jb_sn = 0)
 {
-    global $xoopsDB;
-
-    if (empty($jb_sn)) {
-        return;
+    global $xoopsDB, $xoopsUser;
+    $slot = Tools::slot($jbt_sn);
+    if (!$xoopsUser || !$slot || !Tools::is_date($jb_date)) {
+        return false;
     }
-    $sql = 'DELETE FROM `' . $xoopsDB->prefix('jill_booking') . '` WHERE `jb_sn` = ?';
-    Utility::query($sql, 'i', [$jb_sn]);
-
-}
-
-//刪除jill_booking_date某筆資料資料
-function delete_jill_booking_date($jb_sn = "", $jb_date = "", $jbt_sn = "")
-{
-    global $xoopsDB;
-
-    if (empty($jb_sn) or empty($jb_date) or empty($jbt_sn)) {
-        return;
+    $date_table = $xoopsDB->prefix('jill_booking_date');
+    $and = '';
+    $types = 'is';
+    $params = [(int) $jbt_sn, $jb_date];
+    if ($jb_sn) {
+        $and .= ' AND a.`jb_sn`=?';
+        $types .= 'i';
+        $params[] = (int) $jb_sn;
     }
-
-    $sql = 'SELECT `jb_waiting` FROM `' . $xoopsDB->prefix('jill_booking_date') . '` WHERE `jb_sn`=? AND `jb_date`=? AND `jbt_sn`=?';
-    $result = Utility::query($sql, 'isi', [$jb_sn, $jb_date, $jbt_sn]);
-    list($seed_waiting) = $xoopsDB->fetchRow($result);
-
-    $sql = 'DELETE FROM `' . $xoopsDB->prefix('jill_booking_date') . '` WHERE `jb_sn`=? AND `jb_date`=? AND `jbt_sn`=?';
-    Utility::query($sql, 'isi', [$jb_sn, $jb_date, $jbt_sn]);
-    //更新jb_waiting
-    $sql = 'SELECT * FROM `' . $xoopsDB->prefix('jill_booking_date') . '` WHERE `jb_date`=? AND `jbt_sn` =?';
-    $result = Utility::query($sql, 'si', [$jb_date, $jbt_sn]);
-    while ($all = $xoopsDB->fetchArray($result)) {
-        foreach ($all as $k => $v) {
-            $$k = $v;
+    if (!Tools::is_approver($slot['jbi_sn'])) {
+        if (empty($_SESSION['can_booking'])) {
+            return false;
         }
-        if ($jb_waiting > $seed_waiting) {
-            $jb_waiting = $jb_waiting - 1;
-            $sql = 'UPDATE `' . $xoopsDB->prefix('jill_booking_date') . '` SET `jb_waiting`=? WHERE `jb_sn`=? AND `jb_date`=? AND `jbt_sn`=?';
-            Utility::query($sql, 'iisi', [$jb_waiting, $jb_sn, $jb_date, $jbt_sn]) or die(_TAD_SORT_FAIL . ' (' . date('Y-m-d H:i:s') . ')' . $sql);
+        $and .= ' AND b.`jb_uid`=?';
+        $types .= 'i';
+        $params[] = $xoopsUser->uid();
+    }
+    $sql = "SELECT a.`jb_sn`, a.`jb_waiting` FROM `$date_table` AS a JOIN `" . $xoopsDB->prefix('jill_booking') . "` AS b ON a.`jb_sn`=b.`jb_sn`
+        WHERE a.`jbt_sn`=? AND a.`jb_date`=? $and ORDER BY (a.`jb_status`='1') DESC, a.`jb_waiting` LIMIT 1";
+    $result = Utility::query($sql, $types, $params);
+    $row = $xoopsDB->fetchRow($result);
+    if (!$row) {
+        return false;
+    }
+    list($jb_sn, $waiting) = $row;
+
+    Utility::query("DELETE FROM `$date_table` WHERE `jb_sn`=? AND `jb_date`=? AND `jbt_sn`=?", 'isi', [$jb_sn, $jb_date, $jbt_sn]);
+    Utility::query("UPDATE `$date_table` SET `jb_waiting`=`jb_waiting`-1 WHERE `jb_date`=? AND `jbt_sn`=? AND `jb_waiting`>?", 'sii', [$jb_date, $jbt_sn, $waiting]);
+
+    // 明細全部刪完才刪主檔
+    $result = Utility::query("SELECT COUNT(*) FROM `$date_table` WHERE `jb_sn`=?", 'i', [$jb_sn]);
+    list($left) = $xoopsDB->fetchRow($result);
+    if (!$left) {
+        foreach (['jill_booking_week', 'jill_booking'] as $table) {
+            Utility::query('DELETE FROM `' . $xoopsDB->prefix($table) . '` WHERE `jb_sn`=?', 'i', [$jb_sn]);
         }
-
     }
-
-}
-//刪除jill_booking_week某筆資料資料
-function delete_jill_booking_week($jb_sn = "", $jb_date = "", $jbt_sn = "")
-{
-    global $xoopsDB;
-
-    if (empty($jb_sn) or empty($jb_date) or empty($jbt_sn)) {
-        return;
-    }
-
-    $jb_week = date("w", strtotime($jb_date));
-    $sql = 'DELETE FROM `' . $xoopsDB->prefix('jill_booking_week') . '` WHERE `jb_sn`=? AND `jb_week`=? AND `jbt_sn`=?';
-    Utility::query($sql, 'iii', [$jb_sn, $jb_week, $jbt_sn]);
-
-}
-//取消預約
-function delete_booking($jbt_sn = "", $jb_date = "", $jbi_sn = "")
-{
-    if (empty($jbt_sn) or empty($jb_date)) {
-        return;
-    }
-
-    if (empty($_SESSION['can_booking']) && empty($_SESSION['Isapproval'])) {
-        return;
-    }
-    $bookingArr = get_bookingArr($jbt_sn, $jb_date);
-
-    if (empty($bookingArr)) {
-        return;
-    }
-
-    delete_jill_booking_date($bookingArr['jb_sn'], $jb_date, $jbt_sn);
-
-    if (strtotime($bookingArr['jb_start_date']) == strtotime($bookingArr['jb_end_date'])) {
-        delete_jill_booking_week($bookingArr['jb_sn'], $jb_date, $jbt_sn);
-        delete_jill_booking($bookingArr['jb_sn']);
-    }
-
-    return $jbi_sn;
-
+    return true;
 }
 /********************* XOOPS檢查身分函數 *********************/
 //檢查是否具有預約權限
@@ -313,15 +213,6 @@ function booking_approval()
 }
 
 /********************* 自訂函數 *********************/
-//檢查日期格式
-function is_date($date)
-{
-    if (preg_match("/^[12][0-9]{3}-([0][1-9])|([1][12])-([0][1-9])|([12][0-9])|([3][01])$/", $date)) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
 //取得批次預約日期
 function getdateArr($seed_weekday = "", $start_date = "", $end_date = "")
 {
