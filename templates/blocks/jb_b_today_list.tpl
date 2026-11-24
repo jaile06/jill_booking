@@ -1,6 +1,6 @@
 <style type="text/css" media="screen">
   .resp-vtabs .resp-tabs-container{
-    min-height: <{$block.height}> px;
+    min-height: <{$block.height}>px;
   }
 </style>
 <div class="row d-xl-block m-2">

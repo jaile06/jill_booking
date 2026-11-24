@@ -142,56 +142,6 @@ class Tools
         return implode(',', array_fill(0, count($arr), '?'));
     }
 
-    //取得用了該日期時段的所有者
-    public static function booking_users($jbt_sn = "", $jb_date = "")
-    {
-        global $xoopsDB;
-
-        $sql = 'SELECT a.`jb_waiting`, a.`jb_status`, b.`jb_booking_content`, c.`name`
-            FROM `' . $xoopsDB->prefix('jill_booking_date') . '` AS a
-            LEFT JOIN `' . $xoopsDB->prefix('jill_booking') . '` AS b ON a.`jb_sn`=b.`jb_sn`
-            LEFT JOIN `' . $xoopsDB->prefix('users') . '` AS c ON b.`jb_uid`=c.`uid`
-            WHERE a.`jbt_sn`=? AND a.`jb_date`=? ORDER BY a.`jb_waiting`';
-        $result = Utility::query($sql, 'is', [$jbt_sn, $jb_date]);
-
-        $totalnum = $xoopsDB->getRowsNum($result);
-        $usershtml = "";
-        if ($totalnum > 1) {
-            $users = _MD_JILLBOOKIN_JB_UID . "<ol>";
-            while ($all = $xoopsDB->fetchArray($result)) {
-                ['jb_status' => $jb_status, 'jb_booking_content' => $jb_booking_content, 'name' => $name] = $all;
-                //將是/否選項轉換為圖示
-                $jb_status = ($jb_status == 1) ? '<img src="' . XOOPS_URL . '/modules/jill_booking/images/yes.gif" alt="' . _MD_PASS . '" title="' . _MD_PASS . '">' : '<img src="' . XOOPS_URL . '/modules/jill_booking/images/no.gif" alt="' . _MD_APPROVING . '" title="' . _MD_APPROVING . '">';
-                //列出所有預約者資訊
-                $users .= '<li>' . self::esc($name) . $jb_status . self::esc($jb_booking_content) . '</li>';
-            }
-            $users .= "</ol>";
-            // qtip 會把屬性值當 HTML：內容先跳脫，再整段跳脫放進屬性
-            $users = self::esc($users);
-            $usershtml .= " <a href='#' qtipOpts=\"{}\" qtip-content='$users' ><i class='fa fa-list'></i></a>";
-        }
-        return $usershtml;
-    }
-
-    //取得用了該日期時段的uid
-    public static function get_booking_uid($jbt_sn = "", $jb_date = "")
-    {
-        global $xoopsDB;
-        //先抓核准通過的順位
-        $sql = 'SELECT `jb_waiting` FROM `' . $xoopsDB->prefix('jill_booking_date') . '` WHERE `jbt_sn` =? AND `jb_date` =? AND `jb_status`=? ORDER BY `jb_waiting` ASC LIMIT 1';
-        $result = Utility::query($sql, 'iss', [$jbt_sn, $jb_date, '1']);
-
-        list($jb_waiting) = $xoopsDB->fetchRow($result);
-        $where_jb_waiting = (empty($jb_waiting)) ? 'ORDER BY a.`jb_waiting` ASC LIMIT 1' : ' AND a.`jb_waiting`=? ';
-        $sql2 = 'SELECT b.`jb_sn`, b.`jb_uid`, a.`jb_status`, b.`jb_booking_content` FROM `' . $xoopsDB->prefix('jill_booking_date') . '` AS a
-                    LEFT JOIN `' . $xoopsDB->prefix('jill_booking') . '` AS b ON a.`jb_sn` = b.`jb_sn`
-                    WHERE a.`jbt_sn` = ? AND a.`jb_date` = ? ' . $where_jb_waiting;
-        $result2 = (empty($jb_waiting)) ? Utility::query($sql2, 'is', [$jbt_sn, $jb_date]) : Utility::query($sql2, 'iss', [$jbt_sn, $jb_date, $jb_waiting]);
-
-        $data = $xoopsDB->fetchArray($result2);
-        return $data;
-    }
-
     // 星期名稱，0 為星期日
     public static function week_name($w)
     {
@@ -234,5 +184,4 @@ class Tools
         $xoopsMailer->addHeaders('MIME-Version: 1.0');
         return $xoopsMailer->sendMail($email, $title, $content, []);
     }
-
 }

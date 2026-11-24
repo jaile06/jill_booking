@@ -58,3 +58,4 @@ define("_MD_JILLBOOKIN_NO_ITEM", "Venue not found.");
 define("_MD_JILLBOOKIN_BAD_ITEM", "Please enter a venue name and valid start/end dates.");
 define("_MD_JILLBOOKIN_MAIL_TITLE", "Auto-Reply: booking by %s on %s for %s approved");
 define("_MD_JILLBOOKIN_MAIL_CONTENT", "The booking by %s on %s for %s (%s, %s) has been approved.");
+define("_MD_EXPIRED", "Expired");

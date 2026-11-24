@@ -2,8 +2,10 @@
 namespace XoopsModules\Jill_booking;
 
 use Xmf\Request;
+use XoopsModules\Tadtools\EasyResponsiveTabs;
 use XoopsModules\Tadtools\FormValidator;
 use XoopsModules\Tadtools\Jeditable;
+use XoopsModules\Tadtools\My97DatePicker;
 use XoopsModules\Tadtools\Utility;
 
 // 預約主檔（含 week 子表）
@@ -352,5 +354,143 @@ class Jill_booking
             }
         }
         return $rows;
+    }
+
+    /********************* 後台預約助手 *********************/
+
+    // 助手畫面，列出所有場地
+    public static function helper_form()
+    {
+        global $xoopsTpl;
+        My97DatePicker::render();
+        $xoopsTpl->assign('items', Jill_booking_item::get_all());
+        $xoopsTpl->assign('token', Tools::token());
+    }
+
+    // 某場地某日的時段與是否可約
+    public static function helper_times($jbi_sn, $date)
+    {
+        if (!Tools::is_date($date)) {
+            return [];
+        }
+        $times = Jill_booking_time::get_all($jbi_sn);
+        $booked = Jill_booking_date::by_range(array_column($times, 'jbt_sn'), $date, $date);
+        $w = date('w', strtotime($date));
+        $data = [];
+        foreach ($times as $time) {
+            $main = Jill_booking_date::main($booked[$time['jbt_sn']][$date] ?? []);
+            $opened = in_array($w, explode(',', (string) $time['jbt_week']), true);
+            $row = [
+                'jbt_sn' => (int) $time['jbt_sn'], 'jbi_sn' => (int) $time['jbi_sn'], 'jbt_title' => Tools::esc($time['jbt_title']),
+                'jbt_week' => $time['jbt_week'], 'opened' => $opened, 'can_order' => $opened && !$main,
+            ];
+            if ($main) {
+                $row['order_user'] = \XoopsUser::getUnameFromId($main['jb_uid'], 1);
+                $row['event'] = Tools::esc($main['jb_booking_content']);
+            }
+            $data[] = $row;
+        }
+        return $data;
+    }
+
+    // 代為預約，成功回傳空字串，否則回傳錯誤訊息
+    public static function helper_store(array $data)
+    {
+        $date = trim((string) ($data['jb_date'] ?? ''));
+        $rows = [];
+        foreach ((array) ($data['values'] ?? []) as $jbt_sn) {
+            $slot = Tools::slot((int) $jbt_sn);
+            if (!Tools::bookable($slot, $date, false)) {
+                return _MD_JILLBOOKIN_BAD_DATA;
+            }
+            $rows[$slot['jbt_sn']] = [$slot, $date];
+        }
+        if (!$rows) {
+            return _MD_JILLBOOKIN_BAD_DATA;
+        }
+        if (Jill_booking_date::by_range(array_keys($rows), $date, $date)) {
+            return _MD_JILLBOOKIN_BOOKED;
+        }
+        $event = trim((string) ($data['event'] ?? ''));
+        self::store($event === '' ? _MD_INDIVIDUAL_BOOKING : $event, $date, $date, $rows, true);
+        return '';
+    }
+
+    /********************* 區塊 *********************/
+
+    // 今日預約
+    public static function block_today()
+    {
+        $today = date('Y-m-d');
+        $w = date('w');
+        $content = [];
+        foreach (Jill_booking_item::get_all(true) as $item) {
+            $times = Jill_booking_time::get_all($item['jbi_sn']);
+            $booked = Jill_booking_date::by_range(array_column($times, 'jbt_sn'), $today, $today);
+            $item['todaylist'] = [];
+            foreach ($times as $time) {
+                // 只顯示已核准的
+                $main = Jill_booking_date::main($booked[$time['jbt_sn']][$today] ?? []);
+                if (!in_array($w, explode(',', (string) $time['jbt_week']), true)) {
+                    $name = _MD_EXPIRED;
+                } elseif ($main && $main['jb_status'] == '1') {
+                    $name = self::who($main);
+                } else {
+                    $name = _MD_JILLBOOKIN_NO;
+                }
+                $item['todaylist'][] = ['jbt_title' => Tools::esc($time['jbt_title']), 'name' => $name];
+            }
+            $content[] = $item;
+        }
+        return $content;
+    }
+
+    // 本週預約
+    public static function block_week(array $weekArr)
+    {
+        $today = date('Y-m-d');
+        $content = [];
+        foreach (Jill_booking_item::get_all(true) as $item) {
+            $item['timeArr'] = Jill_booking_time::get_all($item['jbi_sn']);
+            $booked = Jill_booking_date::by_range(array_column($item['timeArr'], 'jbt_sn'), $weekArr[0]['d'], $weekArr[6]['d']);
+            foreach ($item['timeArr'] as $t => $time) {
+                $item['timeArr'][$t]['jbt_title'] = Tools::esc($time['jbt_title']);
+                foreach ($weekArr as $wk => $week) {
+                    $list = $booked[$time['jbt_sn']][$week['d']] ?? [];
+                    $main = Jill_booking_date::main($list);
+                    $cell = ['color' => 'transparent', 'content' => ''];
+                    if ($week['d'] < $today) {
+                        $cell = ['color' => '#959595', 'content' => $main ? self::who($main) : _MD_NO_RECORD];
+                    } elseif (in_array((string) $wk, explode(',', (string) $time['jbt_week']), true)) {
+                        $cell = $main
+                            ? ['color' => '#000000', 'content' => self::who($main) . Jill_booking_date::users_icon($list)]
+                            : ['color' => '#EA4335', 'content' => _MD_JILLBOOKIN_NO];
+                    }
+                    $item['bookingArr'][$t][$wk] = $cell;
+                }
+            }
+            $content[] = $item;
+        }
+        return $content;
+    }
+
+    // 區塊共用：語言、頁籤
+    public static function block_tabs($type, array $content)
+    {
+        $id = Utility::randStr();
+        $tabs = new EasyResponsiveTabs('#iteamtab' . $id, $type);
+        $tabs->rander();
+        return ['options0' => $type, 'content' => $content, 'randStr' => $id, 'height' => count($content) * 60];
+    }
+
+    // 區塊共用：編輯選項
+    public static function block_edit($options)
+    {
+        $opt = '';
+        foreach (['accordion' => _MB_JB_B_TODAY_LIST_OPT0_VAL0, 'default' => _MB_JB_B_TODAY_LIST_OPT0_VAL1, 'vertical' => _MB_JB_B_TODAY_LIST_OPT0_VAL2] as $value => $label) {
+            $selected = $options[0] === $value ? 'selected' : '';
+            $opt .= "<option value='$value' $selected>$label</option>";
+        }
+        return '<table><tr><th>' . _MB_JB_B_TODAY_LIST_OPT0 . "</th><td><select name='options[0]'>$opt</select></td></tr></table>";
     }
 }

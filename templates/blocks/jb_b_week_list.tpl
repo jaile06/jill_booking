@@ -1,6 +1,6 @@
 <style type="text/css" media="screen">
   .resp-vtabs .resp-tabs-container{
-    min-height: <{$block.height}> px;
+    min-height: <{$block.height}>px;
   }
 </style>
 
@@ -35,7 +35,7 @@
                  <td style="text-align:center;vertical-align: middle;"><{$time.jbt_title}></td>
                  <{foreach from=$block.weekArr key=wk item=week}>
                   <td>
-                    <div  id="submit<{$t|default:''}>_<{$wk|default:''}>" style='text-align: center; vertical-align: middle; color:<{$data.bookingArr.$t.$wk.color}>;'>
+                    <div style='text-align: center; vertical-align: middle; color:<{$data.bookingArr.$t.$wk.color}>;'>
                         <{$data.bookingArr.$t.$wk.content}>
                     </div>
                   </td>

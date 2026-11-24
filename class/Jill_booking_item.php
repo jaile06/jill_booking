@@ -47,6 +47,20 @@ class Jill_booking_item
         return $xoopsDB->fetchArray($result);
     }
 
+    // 所有場地（名稱已跳脫）
+    public static function get_all($only_enabled = false)
+    {
+        global $xoopsDB;
+        $where = $only_enabled ? ' WHERE ' . self::ENABLED : '';
+        $result = Utility::query('SELECT `jbi_sn`, `jbi_title` FROM `' . $xoopsDB->prefix('jill_booking_item') . "`$where ORDER BY `jbi_sort`");
+        $data = [];
+        while ($row = $xoopsDB->fetchArray($result)) {
+            $row['jbi_title'] = Tools::esc($row['jbi_title']);
+            $data[] = $row;
+        }
+        return $data;
+    }
+
     // 場地下拉選項；$approver_uid 有值時只列該員審核的場地
     public static function options($def_jbi_sn = 0, $approver_uid = 0)
     {
