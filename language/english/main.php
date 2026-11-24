@@ -54,3 +54,5 @@ define("_MD_JILLBOOKIN_NO_PERM", "You do not have permission to do this.");
 define("_MD_JILLBOOKIN_BAD_DATA", "Please choose a valid date and time slot.");
 define("_MD_JILLBOOKIN_HAS_BOOKING", "It has bookings and cannot be deleted. Please disable it instead.");
 define("_MD_JILLBOOKIN_BOOKED", "The time slot is already booked.");
+define("_MD_JILLBOOKIN_NO_ITEM", "Venue not found.");
+define("_MD_JILLBOOKIN_BAD_ITEM", "Please enter a venue name and valid start/end dates.");

@@ -1,50 +1,25 @@
 <?php
+use XoopsModules\Jill_booking\Jill_booking_item;
+use XoopsModules\Jill_booking\Jill_booking_time;
 use XoopsModules\Jill_booking\Tools;
 use XoopsModules\Tadtools\Utility;
 xoops_loadLanguage('main', 'tadtools');
 
 /********************* 資料庫函數 *********************/
-//以流水號取得某筆jill_booking_item資料
-function get_jill_booking_item($jbi_sn = "", $jbi_enable = "")
+// 轉接到類別，階段 4 搬完前台後刪除
+function get_jill_booking_item($jbi_sn = 0, $only_enabled = false)
 {
-    global $xoopsDB;
-    if (empty($jbi_sn)) {
-        return;
-    }
-
-    $where = ($jbi_enable == "1") ? " where `jbi_sn` = '{$jbi_sn}' and `jbi_enable`='{$jbi_enable}' and ((NOW() between `jbi_start` and `jbi_end`) or  (TO_DAYS(NOW()) - TO_DAYS(`jbi_start`) >=0 and `jbi_end`='0000-00-00')) " : " where `jbi_sn` = '{$jbi_sn}'";
-    $sql = "select * from `" . $xoopsDB->prefix("jill_booking_item") . "` $where ";
-    $result = $xoopsDB->query($sql) or Utility::web_error($sql);
-    $data = $xoopsDB->fetchArray($result);
-    return $data;
+    return Jill_booking_item::get($jbi_sn, $only_enabled);
 }
 
-//取得場地選項(列出有時段設定者)
-function get_jill_booking_time_options($def_jbi_sn = "", $approval = "")
+function get_jill_booking_time_options($def_jbi_sn = 0, $approver_uid = 0)
 {
-    global $xoopsDB;
-    // $where_approval = (empty($approval)) ? "" : " && (`jbi_approval` LIKE '%,{$approval}' || `jbi_approval` LIKE '{$approval},%' || `jbi_approval`='{$approval}')";
-    $sql = 'SELECT `jbi_sn`,`jbi_title`,`jbi_approval` FROM `' . $xoopsDB->prefix('jill_booking_item') . '` WHERE `jbi_enable`=1 AND ((NOW() BETWEEN `jbi_start` AND `jbi_end`) OR (TO_DAYS(NOW()) - TO_DAYS(`jbi_start`) >=0 AND `jbi_end`="0000-00-00")) ORDER BY `jbi_sort`';
-    $result = Utility::query($sql);
+    return Jill_booking_item::options($def_jbi_sn, $approver_uid);
+}
 
-    $opt = "";
-    while ($all = $xoopsDB->fetchArray($result)) {
-        //以下會產生這些變數： $jbt_sn , $jbi_sn , $jbi_title
-        foreach ($all as $k => $v) {
-            $$k = $v;
-        }
-
-        $jbi_approval_arr = explode(',', $jbi_approval);
-        if (!empty($approval) and !in_array($approval, $jbi_approval_arr)) {
-            continue;
-        }
-
-        $is_approval = (empty($jbi_approval)) ? "" : _MD_IS_APPROVAL;
-        $selected = ($jbi_sn == $def_jbi_sn) ? "selected" : "";
-        $opt .= "<option value='$jbi_sn' $selected>$jbi_title{$is_approval}</option>";
-    }
-
-    return $opt;
+function get_jill_booking_time($jbt_sn = 0)
+{
+    return Jill_booking_time::get($jbt_sn);
 }
 
 //以流水號取得某筆jill_booking資料
@@ -61,19 +36,6 @@ function get_jill_booking($jb_sn = "")
     return $data;
 }
 
-//以流水號取得某筆jill_booking_time資料
-function get_jill_booking_time($jbt_sn = "")
-{
-    global $xoopsDB;
-    if (empty($jbt_sn)) {
-        return;
-    }
-
-    $sql = 'SELECT * FROM `' . $xoopsDB->prefix('jill_booking_time') . '` WHERE `jbt_sn` = ?';
-    $result = Utility::query($sql, 'i', [$jbt_sn]);
-    $data = $xoopsDB->fetchArray($result);
-    return $data;
-}
 //新增資料到jill_booking中
 function insert_jill_booking($content, $start_date, $end_date)
 {

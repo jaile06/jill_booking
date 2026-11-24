@@ -1,5 +1,6 @@
 <?php
 use Xmf\Request;
+use XoopsModules\Jill_booking\Jill_booking_time;
 use XoopsModules\Jill_booking\Tools;
 use XoopsModules\Tadtools\FormValidator;
 use XoopsModules\Tadtools\Utility;
@@ -90,7 +91,7 @@ function jill_booking_form($jbi_sn = "")
         $xoopsTpl->assign('max_date', $max_date);
 
         //時段資訊
-        $timeArr = Tools::get_bookingtime_jbisn($jbi_sn);
+        $timeArr = Jill_booking_time::get_all($jbi_sn);
         $xoopsTpl->assign('timeArr', $timeArr);
         //die(var_export($timeArr));
         $weektime = array();

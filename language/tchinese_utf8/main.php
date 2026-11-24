@@ -54,3 +54,5 @@ define("_MD_JILLBOOKIN_NO_PERM", "您沒有此操作的權限");
 define("_MD_JILLBOOKIN_BAD_DATA", "請選擇有效的日期與時段");
 define("_MD_JILLBOOKIN_HAS_BOOKING", "已有預約，不能刪除，請改為停用");
 define("_MD_JILLBOOKIN_BOOKED", "時段已被預約");
+define("_MD_JILLBOOKIN_NO_ITEM", "無此場地");
+define("_MD_JILLBOOKIN_BAD_ITEM", "請填寫場地名稱與正確的啟用、停用日期");

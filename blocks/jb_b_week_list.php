@@ -1,5 +1,6 @@
 <?php
 
+use XoopsModules\Jill_booking\Jill_booking_time;
 use XoopsModules\Jill_booking\Tools;
 if (!class_exists('XoopsModules\Jill_booking\Tools')) {
     require XOOPS_ROOT_PATH . '/modules/jill_booking/preloads/autoloader.php';
@@ -25,7 +26,7 @@ function jb_b_week_list($options)
     while (list($jbi_sn, $jbi_title) = $xoopsDB->fetchRow($result)) {
         $block['content'][$i]['jbi_sn'] = $jbi_sn;
         $block['content'][$i]['jbi_title'] = $jbi_title;
-        $block['content'][$i]['timeArr'] = Tools::get_bookingtime_jbisn($jbi_sn, 1);
+        $block['content'][$i]['timeArr'] = Jill_booking_time::get_all($jbi_sn);
         $block['content'][$i]['bookingArr'] = get_booking_table($block['weekArr'], $block['content'][$i]['timeArr']);
         $i++;
     }

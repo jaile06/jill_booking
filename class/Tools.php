@@ -34,13 +34,13 @@ class Tools
     }
 
     // 拒絕請求並結束
-    public static function deny($msg, $ajax = false)
+    public static function deny($msg, $ajax = false, $url = '')
     {
         if ($ajax) {
             http_response_code(403);
             die(self::esc($msg));
         }
-        redirect_header($_SERVER['PHP_SELF'], 3, $msg);
+        redirect_header($url ?: $_SERVER['PHP_SELF'], 3, $msg);
         exit;
     }
 
@@ -136,16 +136,6 @@ class Tools
         return $slot['jbi_enable'] == '1' && $date >= $start && ($end === '' || $date <= $end);
     }
 
-    // 場地是否已有預約
-    public static function item_has_booking($jbi_sn)
-    {
-        global $xoopsDB;
-        $result = Utility::query('SELECT COUNT(*) FROM `' . $xoopsDB->prefix('jill_booking_date') . '` AS a
-            JOIN `' . $xoopsDB->prefix('jill_booking_time') . '` AS b ON a.`jbt_sn`=b.`jbt_sn` WHERE b.`jbi_sn`=?', 'i', [(int) $jbi_sn]);
-        $row = $xoopsDB->fetchRow($result);
-        return !empty($row[0]);
-    }
-
     // IN (?,?) 的佔位字串
     public static function marks($arr)
     {
@@ -199,31 +189,6 @@ class Tools
         $result2 = (empty($jb_waiting)) ? Utility::query($sql2, 'is', [$jbt_sn, $jb_date]) : Utility::query($sql2, 'iss', [$jbt_sn, $jb_date, $jb_waiting]);
 
         $data = $xoopsDB->fetchArray($result2);
-        return $data;
-    }
-
-    //以jbi_sn取得jill_booking_time陣列
-    public static function get_bookingtime_jbisn($jbi_sn = "")
-    {
-        global $xoopsDB;
-
-        $sql = 'SELECT * FROM `' . $xoopsDB->prefix('jill_booking_time') . '` WHERE `jbi_sn`=? ORDER BY `jbt_sort`';
-        $result = Utility::query($sql, 'i', [$jbi_sn]);
-        $data = array();
-        $i = 0;
-        while ($all = $xoopsDB->fetchArray($result)) {
-            foreach ($all as $k => $v) {
-                $$k = $v;
-            }
-            //jbt_sn,jbi_sn,jbt_title,jbt_sort,jbt_week
-            $data[$i]['jbt_sn'] = $jbt_sn;
-            $data[$i]['jbi_sn'] = $jbi_sn;
-            $data[$i]['jbt_title'] = $jbt_title;
-            $data[$i]['jbt_sort'] = $jbt_sort;
-            $data[$i]['jbt_week'] = $jbt_week;
-            ++$i;
-        }
-        //die(var_export($data));
         return $data;
     }
 
