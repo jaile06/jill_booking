@@ -16,6 +16,14 @@
  **/
 require_once dirname(dirname(dirname(__DIR__))) . '/include/cp_header.php';
 
+// 更新模組會清空快取，下一次請求不載入 preload，需自行載入
+if (!class_exists('XoopsModules\Tadtools\Utility')) {
+    require XOOPS_ROOT_PATH . '/modules/tadtools/preloads/autoloader.php';
+}
+if (!class_exists('XoopsModules\Jill_booking\Tools')) {
+    require XOOPS_ROOT_PATH . '/modules/jill_booking/preloads/autoloader.php';
+}
+
 xoops_loadLanguage('main', $xoopsModule->getVar('dirname'));
 
 if (!isset($xoopsTpl) || !is_object($xoopsTpl)) {

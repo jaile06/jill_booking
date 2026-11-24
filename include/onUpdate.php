@@ -1,5 +1,8 @@
 <?php
 use XoopsModules\Jill_booking\Update;
+if (!class_exists('XoopsModules\Tadtools\Utility')) {
+    require XOOPS_ROOT_PATH . '/modules/tadtools/preloads/autoloader.php';
+}
 if (!class_exists('XoopsModules\Jill_booking\Update')) {
     require dirname(__DIR__) . '/preloads/autoloader.php';
 }

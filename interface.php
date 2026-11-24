@@ -1,5 +1,8 @@
 <?php
 use XoopsModules\Jill_booking\Tools;
+if (!class_exists('XoopsModules\Tadtools\Utility')) {
+    require XOOPS_ROOT_PATH . '/modules/tadtools/preloads/autoloader.php';
+}
 if (!class_exists('XoopsModules\Jill_booking\Tools')) {
     require XOOPS_ROOT_PATH . '/modules/jill_booking/preloads/autoloader.php';
 }
