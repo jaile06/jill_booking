@@ -9,6 +9,7 @@ use XoopsModules\Tadtools\Tmt;
 use XoopsModules\Tadtools\Utility;
 
 // 場地
+// token 由入口檔驗證
 class Jill_booking_item
 {
     // 啟用中的條件；停用日當天仍可用
@@ -126,7 +127,6 @@ class Jill_booking_item
     public static function destroy($jbi_sn)
     {
         global $xoopsDB;
-        Tools::check_token();
         if (self::has_booking($jbi_sn)) {
             Tools::deny(_MD_JILLBOOKIN_HAS_BOOKING);
         }
@@ -139,7 +139,6 @@ class Jill_booking_item
     public static function sort()
     {
         global $xoopsDB;
-        Tools::check_token(true);
         $sort = 1;
         foreach (Request::getArray('tr', [], 'POST') as $jbi_sn) {
             Utility::query('UPDATE `' . $xoopsDB->prefix('jill_booking_item') . '` SET `jbi_sort`=? WHERE `jbi_sn`=?', 'ii', [$sort++, (int) $jbi_sn]);
@@ -176,7 +175,6 @@ class Jill_booking_item
     public static function save_approval($jbi_sn)
     {
         global $xoopsDB;
-        Utility::xoops_security_check();
         self::get_or_deny($jbi_sn, 'main.php');
         $uids = array_filter(array_map('intval', explode(',', Request::getString('jbi_approval', '', 'POST'))));
         Utility::query('UPDATE `' . $xoopsDB->prefix('jill_booking_item') . '` SET `jbi_approval`=? WHERE `jbi_sn`=?', 'si', [implode(',', array_unique($uids)), $jbi_sn]);
@@ -205,7 +203,6 @@ class Jill_booking_item
     // 驗證表單：標題、說明、啟用日、停用日、是否可借
     private static function form_data()
     {
-        Utility::xoops_security_check();
         $title = trim(Request::getText('jbi_title', '', 'POST'));
         $start = Request::getString('jbi_start', '', 'POST');
         $end = Request::getString('jbi_end', '', 'POST');

@@ -8,6 +8,7 @@ use XoopsModules\Tadtools\SweetAlert;
 use XoopsModules\Tadtools\Utility;
 
 // 場地的時段
+// token 由入口檔驗證
 class Jill_booking_time
 {
     const WEEKS = ['0', '1', '2', '3', '4', '5', '6'];
@@ -79,7 +80,6 @@ class Jill_booking_time
     public static function store($jbi_sn)
     {
         global $xoopsDB;
-        Tools::check_token();
         $week = array_intersect(self::WEEKS, Request::getArray('jbt_week', [], 'POST'));
         $title = trim(Request::getText('jbt_title', '', 'POST'));
         if (!$week || $title === '' || !Jill_booking_item::get($jbi_sn)) {
@@ -94,7 +94,6 @@ class Jill_booking_time
     public static function destroy($jbt_sn, $jbi_sn)
     {
         global $xoopsDB;
-        Tools::check_token();
         if (self::booked_count($jbt_sn)) {
             Tools::deny(_MD_JILLBOOKIN_HAS_BOOKING, false, "time.php?jbi_sn=$jbi_sn");
         }
@@ -104,7 +103,6 @@ class Jill_booking_time
     // 複製另一場地的時段
     public static function copy($jbi_sn, $to_jbi_sn)
     {
-        Tools::check_token();
         $rows = self::get_all($jbi_sn);
         if (!$rows || !Jill_booking_item::get($to_jbi_sn)) {
             Tools::deny(_MD_JILLBOOKIN_BAD_DATA, false, "time.php?jbi_sn=$to_jbi_sn");
@@ -117,7 +115,6 @@ class Jill_booking_time
     // 從範本匯入
     public static function import($jbi_sn, $type)
     {
-        Tools::check_token();
         $titles = [];
         if ($type === '18') {
             for ($i = 1; $i <= 8; $i++) {
@@ -138,7 +135,6 @@ class Jill_booking_time
     public static function toggle($jbt_sn, $week)
     {
         global $xoopsDB;
-        Tools::check_token(true);
         $time = self::get($jbt_sn);
         if (!$time || !in_array($week, self::WEEKS, true)) {
             Tools::deny(_MD_JILLBOOKIN_BAD_DATA, true);
@@ -155,7 +151,6 @@ class Jill_booking_time
     public static function save_title($jbt_sn)
     {
         global $xoopsDB;
-        Tools::check_token(true);
         // jeditable 以 innerHTML 回填，送回的是跳脫後文字，存檔前還原
         $title = htmlspecialchars_decode(Request::getText('value', '', 'POST'), ENT_QUOTES);
         Utility::query('UPDATE `' . $xoopsDB->prefix('jill_booking_time') . '` SET `jbt_title`=? WHERE `jbt_sn`=?', 'si', [$title, $jbt_sn]);
@@ -166,7 +161,6 @@ class Jill_booking_time
     public static function sort()
     {
         global $xoopsDB;
-        Tools::check_token(true);
         $sort = 1;
         foreach (Request::getArray('tr', [], 'POST') as $jbt_sn) {
             Utility::query('UPDATE `' . $xoopsDB->prefix('jill_booking_time') . '` SET `jbt_sort`=? WHERE `jbt_sn`=?', 'ii', [$sort++, (int) $jbt_sn]);

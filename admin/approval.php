@@ -1,6 +1,7 @@
 <?php
 use Xmf\Request;
 use XoopsModules\Jill_booking\Jill_booking_item;
+use XoopsModules\Tadtools\Utility;
 
 $GLOBALS['xoopsOption']['template_main'] = 'jill_booking_adm_approval.tpl';
 require_once __DIR__ . '/header.php';
@@ -10,6 +11,7 @@ $jbi_sn = Request::getInt('jbi_sn');
 
 switch ($op) {
     case "save_jbi_approval":
+        Utility::xoops_security_check();
         Jill_booking_item::save_approval($jbi_sn);
         header("location: main.php");
         exit;
