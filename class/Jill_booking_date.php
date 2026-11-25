@@ -224,7 +224,7 @@ class Jill_booking_date
         $xoopsTpl->assign('now_op', 'jill_booking_approvallist');
     }
 
-    // 審核通過並通知，回傳 '1' 或 '0'
+    // 審核通過並通知，回傳 '1' 或 '0'；同一時段只能核准一筆
     public static function approve($jb_sn, $date, $jbt_sn)
     {
         global $xoopsDB, $xoopsUser;
@@ -234,14 +234,22 @@ class Jill_booking_date
             Tools::deny(_MD_JILLBOOKIN_NO_PERM, true);
         }
         $table = $xoopsDB->prefix('jill_booking_date');
-        $result = Utility::query("SELECT b.`jb_uid` FROM `$table` AS a JOIN `" . $xoopsDB->prefix('jill_booking') . '` AS b ON a.`jb_sn`=b.`jb_sn`
+        $result = Utility::query("SELECT b.`jb_uid`, a.`jb_status` FROM `$table` AS a JOIN `" . $xoopsDB->prefix('jill_booking') . '` AS b ON a.`jb_sn`=b.`jb_sn`
             WHERE a.`jb_sn`=? AND a.`jb_date`=? AND a.`jbt_sn`=?', 'isi', [$jb_sn, $date, $jbt_sn]);
         $row = $xoopsDB->fetchRow($result);
         if (!$row) {
             return '0';
         }
         $now = date('Y-m-d', xoops_getUserTimestamp(time()));
-        Utility::query("UPDATE `$table` SET `jb_status`='1', `approver`=?, `pass_date`=? WHERE `jb_sn`=? AND `jb_date`=? AND `jbt_sn`=?", 'isisi', [$xoopsUser->uid(), $now, $jb_sn, $date, $jbt_sn]);
+        // 檢查與更新用同一個敘述，避免同時核准兩筆；已核准的也不會再更新
+        Utility::query("UPDATE `$table` AS a LEFT JOIN `$table` AS c ON c.`jb_date`=a.`jb_date` AND c.`jbt_sn`=a.`jbt_sn` AND c.`jb_status`='1'
+            SET a.`jb_status`='1', a.`approver`=?, a.`pass_date`=?
+            WHERE a.`jb_sn`=? AND a.`jb_date`=? AND a.`jbt_sn`=? AND c.`jb_sn` IS NULL", 'isisi', [$xoopsUser->uid(), $now, $jb_sn, $date, $jbt_sn]);
+        // TadTools 4.0.1 取不到影響列數，讀回確認這筆是自己剛核准的
+        $result = Utility::query("SELECT 1 FROM `$table` WHERE `jb_sn`=? AND `jb_date`=? AND `jbt_sn`=? AND `jb_status`='1' AND `approver`=?", 'isii', [$jb_sn, $date, $jbt_sn, $xoopsUser->uid()]);
+        if ($row[1] === '1' || !$xoopsDB->fetchRow($result)) {
+            Tools::deny(_MD_JILLBOOKIN_APPROVED, true);
+        }
 
         // 通知預約者與所有審核者
         $name = \XoopsUser::getUnameFromId($row[0], 1);

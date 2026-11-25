@@ -66,9 +66,11 @@
                 <td><{$data.jb_booking_content}></td>
                 <td>
                   <div class="d-flex flex-wrap justify-content-center gap-1">
-                    <button type="button" onclick="update_jb_status_func(<{$data.jb_sn}>,'<{$data.jb_date}>',<{$data.jbt_sn}>,<{$data.jbi_sn}>,<{$i|default:''}>);" class="jb-action jb-action-success">
-                      <i class="fa-solid fa-check" aria-hidden="true"></i> <{$smarty.const._MD_PASS}>
-                    </button>
+                    <{if $data.had_pass|default:'' == ''}>
+                      <button type="button" onclick="update_jb_status_func(<{$data.jb_sn}>,'<{$data.jb_date}>',<{$data.jbt_sn}>,<{$data.jbi_sn}>,<{$i|default:''}>);" class="jb-action jb-action-success">
+                        <i class="fa-solid fa-check" aria-hidden="true"></i> <{$smarty.const._MD_PASS}>
+                      </button>
+                    <{/if}>
                     <button type="button" onclick="delete_jill_booking_func('<{$data.jb_sn}>_<{$data.jbt_sn}>_<{$data.jb_date}>_<{$data.jbi_sn}>');" class="jb-action jb-action-danger">
                       <i class="fa-regular fa-trash-can" aria-hidden="true"></i> <{$smarty.const._TAD_DEL}>
                     </button>
