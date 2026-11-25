@@ -189,7 +189,7 @@ class Jill_booking_date
         $xoopsTpl->assign('now_op', 'jill_booking_list');
     }
 
-    // 待審清單
+    // 待審清單，只列未核准的（免審核場地與預約助手的預約一建立就已核准）
     public static function index_approval($jbi_sn = 0)
     {
         global $xoopsDB, $xoopsTpl, $xoopsUser;
@@ -198,7 +198,7 @@ class Jill_booking_date
                 FROM `' . $xoopsDB->prefix('jill_booking_date') . '` AS a
                 JOIN `' . $xoopsDB->prefix('jill_booking') . '` AS b ON a.`jb_sn`=b.`jb_sn`
                 JOIN `' . $xoopsDB->prefix('jill_booking_time') . '` AS c ON a.`jbt_sn`=c.`jbt_sn`
-                WHERE c.`jbi_sn`=' . (int) $jbi_sn . " AND a.`pass_date` IS NULL AND a.`jb_date`>='" . date('Y-m-d') . "'
+                WHERE c.`jbi_sn`=' . (int) $jbi_sn . " AND a.`jb_status`='0' AND a.`pass_date` IS NULL AND a.`jb_date`>='" . date('Y-m-d') . "'
                 ORDER BY a.`jb_date`, a.`jbt_sn`, b.`jb_booking_time`";
             $PageBar = Utility::getPageBar($sql, 20, 10);
             $result = Utility::query($PageBar['sql']);
@@ -257,13 +257,13 @@ class Jill_booking_date
         return '1';
     }
 
-    // 該時段已核給誰
+    // 該時段已核給誰；預約助手等直接核准的沒有通過日期
     private static function had_pass($jbt_sn, $date)
     {
         global $xoopsDB;
         $result = Utility::query('SELECT a.`pass_date`, b.`jb_uid` FROM `' . $xoopsDB->prefix('jill_booking_date') . '` AS a
             JOIN `' . $xoopsDB->prefix('jill_booking') . "` AS b ON b.`jb_sn`=a.`jb_sn`
-            WHERE a.`pass_date` IS NOT NULL AND a.`jb_status`='1' AND a.`jb_date`=? AND a.`jbt_sn`=? ORDER BY a.`jb_waiting` LIMIT 1", 'si', [$date, $jbt_sn]);
+            WHERE a.`jb_status`='1' AND a.`jb_date`=? AND a.`jbt_sn`=? ORDER BY a.`jb_waiting` LIMIT 1", 'si', [$date, $jbt_sn]);
         $row = $xoopsDB->fetchRow($result);
         return $row ? $row[0] . _MD_JILLBOOKIN_HADPASS . \XoopsUser::getUnameFromId($row[1], 1) : '';
     }
