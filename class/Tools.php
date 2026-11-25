@@ -1,6 +1,7 @@
 <?php
 namespace XoopsModules\Jill_booking;
 
+use Xmf\Request;
 use XoopsModules\Tadtools\Utility;
 
 class Tools
@@ -17,19 +18,57 @@ class Tools
         return preg_match('/^(\d{4})-(\d{2})-(\d{2})$/D', (string) $date, $m) && checkdate((int) $m[2], (int) $m[3], (int) $m[1]);
     }
 
-    // 同一頁共用一個 token（供 AJAX 與連結）
+    // 同一頁共用一個 token
     public static function token()
     {
         static $token;
         return $token ??= $GLOBALS['xoopsSecurity']->createToken();
     }
 
-    // ponytail: 不清除 token，同頁多次 AJAX 才能重用；到期由核心回收
+    // 寫入 op 一律經此：只收 POST 與 POST 內的 token
+    // ponytail: AJAX 不清除 token，同頁多次 AJAX 才能重用，到期由核心回收；其餘用過即清除
     public static function xoops_security_check($ajax = false)
     {
-        if (!$GLOBALS['xoopsSecurity']->check(false)) {
+        // 空 token 要先擋：2.7.4 核心收到空字串會改讀網址
+        $token = Request::getString('XOOPS_TOKEN_REQUEST', '', 'POST');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $token === '' || !$GLOBALS['xoopsSecurity']->check(!$ajax, $token)) {
             self::deny(_MD_JILLBOOKIN_TOKEN_FAIL, $ajax);
         }
+    }
+
+    // 產生 JS 函式 $func：確認後以 POST 送到目前頁面；$vars 為函式參數，$data 為固定欄位
+    // TadTools 的 SweetAlert 只能導向網址（GET），所以只用它的資源
+    public static function confirm_post($func, $op, array $vars, array $data = [])
+    {
+        global $xoTheme;
+        xoops_loadLanguage('main', 'tadtools');
+        Utility::get_jquery();
+        $xoTheme->addStylesheet('modules/tadtools/sweet-alert/sweet-alert.css');
+        $xoTheme->addScript('modules/tadtools/sweet-alert/sweet-alert.js');
+
+        $js = fn($value) => json_encode($value, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
+        $args = implode(', ', $vars);
+        $fixed = $js(['op' => $op, 'XOOPS_TOKEN_REQUEST' => self::token()] + $data);
+        $xoTheme->addScript('', null, "
+            function {$func}({$args}) {
+                swal({
+                    title: {$js(_TAD_DEL_CONFIRM_TITLE)},
+                    text: {$js(_TAD_DEL_CONFIRM_TEXT)},
+                    type: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#DD6B55',
+                    confirmButtonText: {$js(_TAD_DEL_CONFIRM_BTN)},
+                    closeOnConfirm: false,
+                    allowOutsideClick: true
+                }, function() {
+                    var form = $('<form method=\"post\">').attr('action', {$js($_SERVER['PHP_SELF'])});
+                    $.each($.extend({$fixed}, {{$args}}), function(name, value) {
+                        $('<input type=\"hidden\">').attr({name: name, value: value}).appendTo(form);
+                    });
+                    form.appendTo('body')[0].submit();
+                });
+            }
+        ");
     }
 
     // 拒絕請求並結束

@@ -4,7 +4,6 @@ namespace XoopsModules\Jill_booking;
 use Xmf\Request;
 use XoopsModules\Tadtools\FormValidator;
 use XoopsModules\Tadtools\Jeditable;
-use XoopsModules\Tadtools\SweetAlert;
 use XoopsModules\Tadtools\Utility;
 
 // 場地的時段
@@ -54,8 +53,7 @@ class Jill_booking_time
         $xoopsTpl->assign('jbi_sn', $jbi_sn);
         $xoopsTpl->assign('place_time', self::places());
 
-        $sweet_alert = new SweetAlert();
-        $sweet_alert->render('delete_jill_booking_time_func', "{$_SERVER['PHP_SELF']}?op=delete_jill_booking_time&XOOPS_TOKEN_REQUEST=" . Tools::token() . "&jbi_sn=$jbi_sn&jbt_sn=", 'jbt_sn');
+        Tools::confirm_post('delete_jill_booking_time_func', 'delete_jill_booking_time', ['jbt_sn'], ['jbi_sn' => $jbi_sn]);
         $formValidator = new FormValidator('#myForm', true);
         $xoopsTpl->assign('formValidator_code', $formValidator->render());
         // 沒有可編輯欄位時 Jeditable 會讀到未定義變數

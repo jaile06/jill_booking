@@ -16,8 +16,7 @@ switch ($op) {
 
     case 'create_orders':
         Tools::xoops_security_check(true);
-        $data = json_decode(file_get_contents('php://input'), true);
-        $error = Jill_booking::helper_store(is_array($data) ? $data : []);
+        $error = Jill_booking::helper_store(Request::getString('jb_date', '', 'POST'), Request::getArray('values', [], 'POST'), Request::getText('event', '', 'POST'));
         header('Content-Type: application/json; charset=utf-8');
         die(json_encode(['result' => $error === '', 'msg' => $error], JSON_UNESCAPED_UNICODE));
 

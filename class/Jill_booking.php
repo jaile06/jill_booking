@@ -6,7 +6,6 @@ use XoopsModules\Tadtools\EasyResponsiveTabs;
 use XoopsModules\Tadtools\FormValidator;
 use XoopsModules\Tadtools\Jeditable;
 use XoopsModules\Tadtools\My97DatePicker;
-use XoopsModules\Tadtools\SweetAlert;
 use XoopsModules\Tadtools\Utility;
 
 // 預約主檔（含 week 子表）
@@ -173,8 +172,7 @@ class Jill_booking
 
         $xoopsTpl->assign('jquery', Utility::get_jquery(true));
         Jill_booking_date::qtip();
-        $sweet_alert = new SweetAlert();
-        $sweet_alert->render('delete_booking', "{$_SERVER['PHP_SELF']}?op=delete_booking&XOOPS_TOKEN_REQUEST=" . Tools::token() . '&', ['jbt_sn', 'jb_date', 'jbi_sn']);
+        Tools::confirm_post('delete_booking', 'delete_booking', ['jbt_sn', 'jb_date', 'jbi_sn']);
         $xoopsTpl->assign('token', Tools::token());
         $xoopsTpl->assign('jbi_sn', $item ? $jbi_sn : '');
         $xoopsTpl->assign('item_opt', Jill_booking_item::options($jbi_sn));
@@ -440,11 +438,11 @@ class Jill_booking
     }
 
     // 代為預約，成功回傳空字串，否則回傳錯誤訊息
-    public static function helper_store(array $data)
+    public static function helper_store($date, array $jbt_sns, $event)
     {
-        $date = trim((string) ($data['jb_date'] ?? ''));
+        $date = trim($date);
         $rows = [];
-        foreach ((array) ($data['values'] ?? []) as $jbt_sn) {
+        foreach ($jbt_sns as $jbt_sn) {
             $slot = Tools::slot((int) $jbt_sn);
             if (!Tools::bookable($slot, $date, false)) {
                 return _MD_JILLBOOKIN_BAD_DATA;
@@ -457,7 +455,7 @@ class Jill_booking
         if (Jill_booking_date::by_range(array_keys($rows), $date, $date)) {
             return _MD_JILLBOOKIN_BOOKED;
         }
-        $event = trim((string) ($data['event'] ?? ''));
+        $event = trim($event);
         return self::store($event === '' ? _MD_INDIVIDUAL_BOOKING : $event, $date, $date, $rows, true) ? '' : _MD_JILLBOOKIN_BOOKED;
     }
 

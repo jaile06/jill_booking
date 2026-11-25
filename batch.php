@@ -1,7 +1,7 @@
 <?php
 use Xmf\Request;
 use XoopsModules\Jill_booking\Jill_booking;
-use XoopsModules\Tadtools\Utility;
+use XoopsModules\Jill_booking\Tools;
 
 /*-----------引入檔案區--------------*/
 require_once __DIR__ . '/header.php';
@@ -16,14 +16,14 @@ $key = Request::getString('key');
 switch ($op) {
     //第一步：暫存
     case "insert_jill_booking":
-        Utility::xoops_security_check();
+        Tools::xoops_security_check();
         $key = Jill_booking::batch_prepare();
         header("location: {$_SERVER['PHP_SELF']}?op=list_jill_booking&key={$key}");
         exit;
 
     //第二步：寫入
     case "insert_jill_booking_date":
-        Utility::xoops_security_check();
+        Tools::xoops_security_check();
         $jbi_sn = Jill_booking::batch_store($key);
         header("location: index.php?jbi_sn=$jbi_sn");
         exit;

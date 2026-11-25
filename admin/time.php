@@ -2,7 +2,6 @@
 use Xmf\Request;
 use XoopsModules\Jill_booking\Jill_booking_time;
 use XoopsModules\Jill_booking\Tools;
-use XoopsModules\Tadtools\Utility;
 
 $GLOBALS['xoopsOption']['template_main'] = 'jill_booking_adm_time.tpl';
 require_once __DIR__ . '/header.php';
@@ -15,7 +14,7 @@ $to_jbi_sn = Request::getInt('to_jbi_sn');
 
 switch ($op) {
     case "insert_jill_booking_time":
-        Utility::xoops_security_check();
+        Tools::xoops_security_check();
         Jill_booking_time::store($jbi_sn);
         header("location: {$_SERVER['PHP_SELF']}?jbi_sn=$jbi_sn");
         exit;

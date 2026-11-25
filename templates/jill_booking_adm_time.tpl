@@ -119,22 +119,32 @@
             <div class="px-3 py-2 fw-semibold border-bottom" style="background-color:#EEF4F8;color:#1E293B;">
               <i class="fa-solid fa-file-import me-1" aria-hidden="true"></i> <{$smarty.const._MA_JILLBOOKIN_IMPORT}>
             </div>
-            <div class="list-group list-group-flush">
-              <a href="time.php?op=import_time&jbi_sn=<{$jbi_sn|default:''}>&type=18&XOOPS_TOKEN_REQUEST=<{$token|default:''}>" class="list-group-item list-group-item-action d-flex align-items-center gap-2">
+            <form action="time.php" method="post" class="list-group list-group-flush">
+              <input type="hidden" name="op" value="import_time">
+              <input type="hidden" name="jbi_sn" value="<{$jbi_sn|default:''}>">
+              <input type="hidden" name="XOOPS_TOKEN_REQUEST" value="<{$token|default:''}>">
+              <button type="submit" name="type" value="18" class="list-group-item list-group-item-action d-flex align-items-center gap-2">
                 <i class="fa-solid fa-file-import" aria-hidden="true"></i>
                 <span><{$smarty.const._MA_JILLBOOKIN_IMPORT_18}></span>
-              </a>
-              <a href="time.php?op=import_time&jbi_sn=<{$jbi_sn|default:''}>&type=apm&XOOPS_TOKEN_REQUEST=<{$token|default:''}>" class="list-group-item list-group-item-action d-flex align-items-center gap-2">
+              </button>
+              <button type="submit" name="type" value="apm" class="list-group-item list-group-item-action d-flex align-items-center gap-2">
                 <i class="fa-solid fa-file-import" aria-hidden="true"></i>
                 <span><{$smarty.const._MA_JILLBOOKIN_IMPORT_APM}></span>
-              </a>
-              <{foreach from=$place_time item=place}>
-                <a href="time.php?op=copy_time&jbi_sn=<{$place.jbi_sn}>&to_jbi_sn=<{$jbi_sn|default:''}>&XOOPS_TOKEN_REQUEST=<{$token|default:''}>" class="list-group-item list-group-item-action d-flex align-items-center gap-2">
-                  <i class="fa-regular fa-copy" aria-hidden="true"></i>
-                  <span><{$place.jbi_link}></span>
-                </a>
-              <{/foreach}>
-            </div>
+              </button>
+            </form>
+            <{if $place_time|default:false}>
+              <form action="time.php" method="post" class="list-group list-group-flush border-top">
+                <input type="hidden" name="op" value="copy_time">
+                <input type="hidden" name="to_jbi_sn" value="<{$jbi_sn|default:''}>">
+                <input type="hidden" name="XOOPS_TOKEN_REQUEST" value="<{$token|default:''}>">
+                <{foreach from=$place_time item=place}>
+                  <button type="submit" name="jbi_sn" value="<{$place.jbi_sn}>" class="list-group-item list-group-item-action d-flex align-items-center gap-2">
+                    <i class="fa-regular fa-copy" aria-hidden="true"></i>
+                    <span><{$place.jbi_link}></span>
+                  </button>
+                <{/foreach}>
+              </form>
+            <{/if}>
           </div>
         <{/if}>
       </div>

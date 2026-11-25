@@ -84,10 +84,8 @@
 
       $.ajax({
         type: 'POST',
-        url: `${location.href}?op=create_orders&XOOPS_TOKEN_REQUEST=<{$token|default:''}>`,
-        async: true,
-        data: JSON.stringify({...data, event: eventInput.val(), values}),
-        contentType: "application/json; charset=utf-8",
+        url: 'booking_helper.php',
+        data: {...data, event: eventInput.val(), values, op: 'create_orders', XOOPS_TOKEN_REQUEST: '<{$token|default:''}>'},
         dataType: "json",
         error: xhr => msgBlock.attr('class', 'alert alert-danger').text(xhr.responseText).show(),
         success: data => {

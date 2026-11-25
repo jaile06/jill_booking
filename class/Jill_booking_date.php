@@ -1,7 +1,6 @@
 <?php
 namespace XoopsModules\Jill_booking;
 
-use XoopsModules\Tadtools\SweetAlert;
 use XoopsModules\Tadtools\Utility;
 
 // 預約明細、候補、審核
@@ -181,8 +180,7 @@ class Jill_booking_date
             $all_content[] = $data;
         }
 
-        $sweet_alert = new SweetAlert();
-        $sweet_alert->render('delete_jill_booking_func', "{$_SERVER['PHP_SELF']}?op=delete_jill_booking&XOOPS_TOKEN_REQUEST=" . Tools::token() . '&primary=', 'primary');
+        Tools::confirm_post('delete_jill_booking_func', 'delete_jill_booking', ['primary']);
         $xoopsTpl->assign('item_opt', Jill_booking_item::options($jbi_sn));
         $xoopsTpl->assign('bar', $PageBar['bar']);
         $xoopsTpl->assign('action', $_SERVER['PHP_SELF']);
@@ -216,8 +214,7 @@ class Jill_booking_date
             $xoopsTpl->assign('all_content', $all_content);
         }
 
-        $sweet_alert = new SweetAlert();
-        $sweet_alert->render('delete_jill_booking_func', "{$_SERVER['PHP_SELF']}?op=delete_booking&XOOPS_TOKEN_REQUEST=" . Tools::token() . '&jb_info=', 'jb_info');
+        Tools::confirm_post('delete_jill_booking_func', 'delete_booking', ['jb_info']);
         $xoopsTpl->assign('token', Tools::token());
         $xoopsTpl->assign('action', $_SERVER['PHP_SELF']);
         // 模組管理員可審核所有場地

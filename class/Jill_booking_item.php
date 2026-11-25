@@ -5,7 +5,6 @@ use Xmf\Request;
 use XoopsModules\Tadtools\CkEditor;
 use XoopsModules\Tadtools\FormValidator;
 use XoopsModules\Tadtools\My97DatePicker;
-use XoopsModules\Tadtools\SweetAlert;
 use XoopsModules\Tadtools\Tmt;
 use XoopsModules\Tadtools\Utility;
 
@@ -250,7 +249,6 @@ class Jill_booking_item
 
     private static function delete_js()
     {
-        $sweet_alert = new SweetAlert();
-        $sweet_alert->render('delete_jill_booking_item_func', "{$_SERVER['PHP_SELF']}?op=delete_jill_booking_item&XOOPS_TOKEN_REQUEST=" . Tools::token() . '&jbi_sn=', 'jbi_sn');
+        Tools::confirm_post('delete_jill_booking_item_func', 'delete_jill_booking_item', ['jbi_sn']);
     }
 }
