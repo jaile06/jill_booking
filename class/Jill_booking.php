@@ -145,7 +145,8 @@ class Jill_booking
                                 $content = self::cell_own($main, $slot, $date, $users);
                             } else {
                                 $head = $is_approver ? self::delete_icon($main, $slot, $date) : self::who($main);
-                                $content = $head . $users . "<div class='show_reason'>" . Tools::esc($main['jb_booking_content']) . '</div>';
+                                $reason = $xoopsUser ? "<div class='show_reason'>" . Tools::esc($main['jb_booking_content']) . '</div>' : '';
+                                $content = $head . $users . $reason;
                             }
                             $cell = ['color' => '#1E293B', 'content' => $content] + $cell;
                         }
@@ -181,9 +182,13 @@ class Jill_booking
         $xoopsTpl->assign('action', $_SERVER['PHP_SELF']);
     }
 
-    // 待審或預約者姓名
+    // 待審或預約者姓名（週曆與區塊共用）；訪客不顯示姓名
     public static function who($booking)
     {
+        global $xoopsUser;
+        if (!$xoopsUser) {
+            return $booking['jb_status'] == '1' ? _MD_JILLBOOKIN_BOOKED : _MD_APPROVING;
+        }
         $name = \XoopsUser::getUnameFromId($booking['jb_uid'], 1);
         return $booking['jb_status'] == '1' ? $name : _MD_APPROVING . ":{$name}";
     }

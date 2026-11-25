@@ -50,10 +50,11 @@ class Jill_booking_date
         return $list[0] ?? null;
     }
 
-    // 超過一人時的清單圖示（qtip）
+    // 超過一人時的清單圖示（qtip）；內含姓名與理由，訪客不顯示
     public static function users_icon(array $list)
     {
-        if (count($list) < 2) {
+        global $xoopsUser;
+        if (!$xoopsUser || count($list) < 2) {
             return '';
         }
         $users = _MD_JILLBOOKIN_JB_UID . '<ol>';
