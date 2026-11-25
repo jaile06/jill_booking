@@ -1,0 +1,6 @@
+# 開發檔案不對外公開：.git 等隱藏檔、*.md、openspec、tests、sql
+# 以 ~數字 結尾的是 Windows 短檔名（如 GIT~1），一併擋下
+# nginx 不讀此檔，請在站台設定擋下相同路徑
+<IfModule mod_alias.c>
+    RedirectMatch 404 "(?i)/jill_booking/+(\.|.*/\.|openspec|tests|sql|[^/]*~[0-9]|.*\.md)"
+</IfModule>
