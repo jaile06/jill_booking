@@ -14,6 +14,8 @@
  * @author
  * @version      $Id $
  **/
+// PHP_SELF 會帶入網址尾端的任意內容，改用實際檔案路徑（本模組與 TadTools 都會用到）
+$_SERVER['PHP_SELF'] = $_SERVER['SCRIPT_NAME'];
 require_once dirname(dirname(dirname(__DIR__))) . '/include/cp_header.php';
 
 // 更新模組會清空快取，下一次請求不載入 preload，需自行載入

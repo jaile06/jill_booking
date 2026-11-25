@@ -57,12 +57,13 @@ class Jill_booking
         }
     }
 
-    // 修改預約理由：限本人或模組管理員，回傳顯示用內容
+    // 修改預約理由：限本人或模組管理員，且有預約權限、預約尚未過期，回傳顯示用內容
     public static function update_content($jb_sn)
     {
         global $xoopsDB, $xoopsUser;
         $booking = self::get($jb_sn);
-        if (!$xoopsUser || !$booking || ($booking['jb_uid'] != $xoopsUser->uid() && !$xoopsUser->isAdmin())) {
+        if (!$xoopsUser || !$booking || ($booking['jb_uid'] != $xoopsUser->uid() && !$xoopsUser->isAdmin())
+            || empty($_SESSION['can_booking']) || !Jill_booking_date::is_active($jb_sn)) {
             Tools::deny(_MD_JILLBOOKIN_NO_PERM, true);
         }
         // jeditable 以 innerHTML 回填，送回的是跳脫後文字，存檔前還原
@@ -113,6 +114,7 @@ class Jill_booking
             $booked = Jill_booking_date::by_range(array_column($timeArr, 'jbt_sn'), $weekArr[0]['d'], $weekArr[6]['d']);
 
             $jeditable = new Jeditable();
+            $own = [];
             $bookingArr = [];
             foreach ($timeArr as $t => $time) {
                 $timeArr[$t]['jbt_title'] = Tools::esc($time['jbt_title']);
@@ -139,7 +141,7 @@ class Jill_booking
                             $users = Jill_booking_date::users_icon($list);
                             $slot = $time + ['jbi_sn' => $jbi_sn];
                             if ($uid == $main['jb_uid'] && $_SESSION['can_booking']) {
-                                self::editable($jeditable, $main['jb_sn']);
+                                $own[$main['jb_sn']] = true;
                                 $content = self::cell_own($main, $slot, $date, $users);
                             } else {
                                 $head = $is_approver ? self::delete_icon($main, $slot, $date) : self::who($main);
@@ -150,6 +152,9 @@ class Jill_booking
                     }
                     $bookingArr[$t][$wk] = $cell;
                 }
+            }
+            foreach (array_keys($own) as $jb_sn) {
+                self::editable($jeditable, $jb_sn);
             }
             // 沒有可編輯欄位時 Jeditable 會讀到未定義變數
             if ($jeditable->cols) {
@@ -186,7 +191,7 @@ class Jill_booking
     private static function cell_own($booking, $slot, $date, $users)
     {
         return self::delete_icon($booking, $slot, $date) . $users
-            . "<div id='jb_booking_content{$booking['jb_sn']}' class='edit show_reason'>" . Tools::esc($booking['jb_booking_content']) . '</div>';
+            . "<div class='edit show_reason jb_content_{$booking['jb_sn']}'>" . Tools::esc($booking['jb_booking_content']) . '</div>';
     }
 
     private static function delete_icon($booking, $slot, $date)
@@ -196,10 +201,23 @@ class Jill_booking
         return "<span class='fw-medium'>{$name}</span><button type='button' onclick=\"delete_booking({$slot['jbt_sn']},'{$date}',{$slot['jbi_sn']});\" class='btn btn-link jb_delete p-1' aria-label='{$label}' title='{$label}'><i class='fa-solid fa-xmark' aria-hidden='true'></i></button>";
     }
 
+    // 批次預約一週可能佔多格，以 class 綁定。Jeditable 失焦就送出，
+    // 所以沒改不送、存檔後同步其他格，避免另一格的舊內容蓋掉新內容
     private static function editable($jeditable, $jb_sn)
     {
-        $jeditable->setTextCol("#jb_booking_content{$jb_sn}", 'index.php', '100%', '2.25rem',
-            "{'jb_sn':'" . (int) $jb_sn . "', 'op' : 'save_jb_booking_content', 'XOOPS_TOKEN_REQUEST' : '" . Tools::token() . "'}", 'Edit');
+        $selector = '.jb_content_' . (int) $jb_sn;
+        // TadTools 沒有 onsubmit、callback 參數，接在 submitdata 後面帶入
+        $jeditable->setTextCol($selector, 'index.php', '100%', '2.25rem',
+            "{'jb_sn':'" . (int) $jb_sn . "', 'op' : 'save_jb_booking_content', 'XOOPS_TOKEN_REQUEST' : '" . Tools::token() . "'},
+            onsubmit: function(settings, original) {
+                if ($('input', this).val() === original.revert) {
+                    original.reset(this);
+                    return false;
+                }
+            },
+            callback: function(value) {
+                $('$selector').not(this).not(':has(form)').html(value || 'Edit');
+            }", 'Edit');
     }
 
     /********************* 批次預約 *********************/
@@ -266,8 +284,9 @@ class Jill_booking
             Tools::deny(_MD_JILLBOOKIN_BAD_DATA);
         }
         [$min, $max] = Tools::item_range($item);
-        // ponytail: 場地不限迄日時批次最多一年，避免一次展開過多日期
-        $max = $max === '' ? date('Y-m-d', strtotime('+1 year')) : $max;
+        // ponytail: 批次最多一年，避免一次展開過多日期
+        $year = date('Y-m-d', strtotime('+1 year'));
+        $max = $max === '' ? $year : min($max, $year);
         $start = max($start, $min);
         $end = min($end, $max);
         if ($start > $end) {

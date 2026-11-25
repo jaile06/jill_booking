@@ -14,8 +14,7 @@ class Tools
     // 嚴格的 Y-m-d 檢查
     public static function is_date($date)
     {
-        $obj = \DateTime::createFromFormat('!Y-m-d', (string) $date);
-        return $obj && $obj->format('Y-m-d') === $date;
+        return preg_match('/^(\d{4})-(\d{2})-(\d{2})$/D', (string) $date, $m) && checkdate((int) $m[2], (int) $m[3], (int) $m[1]);
     }
 
     // 同一頁共用一個 token（供 AJAX 與連結）
@@ -166,7 +165,8 @@ class Tools
     public static function dates_in($start, $end, array $weeks)
     {
         $dates = [];
-        for ($date = $start; $date <= $end; $date = date('Y-m-d', strtotime("$date +1 day"))) {
+        // 9999-12-31 的隔天變成五位數年份，字串比較會失準，以長度擋下
+        for ($date = $start; $date <= $end && strlen($date) === 10; $date = date('Y-m-d', strtotime("$date +1 day"))) {
             if (in_array(date('w', strtotime($date)), $weeks, true)) {
                 $dates[] = $date;
             }

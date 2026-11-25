@@ -92,12 +92,12 @@ class Jill_booking_date
         ");
     }
 
-    // 取消預約：場地審核者可取消該場地任一筆，其他人只能取消自己的
+    // 取消預約：場地審核者可取消該場地任一筆，其他人只能取消自己的；過去的一律不可取消
     public static function destroy($jbt_sn, $date, $jb_sn = 0)
     {
         global $xoopsDB, $xoopsUser;
         $slot = Tools::slot($jbt_sn);
-        if (!$xoopsUser || !$slot || !Tools::is_date($date)) {
+        if (!$xoopsUser || !$slot || !Tools::is_date($date) || $date < date('Y-m-d')) {
             return false;
         }
         $table = $xoopsDB->prefix('jill_booking_date');
@@ -133,6 +133,14 @@ class Jill_booking_date
             Jill_booking::destroy($jb_sn);
         }
         return true;
+    }
+
+    // 一張預約單是否還有今天以後的明細
+    public static function is_active($jb_sn)
+    {
+        global $xoopsDB;
+        $result = Utility::query('SELECT MAX(`jb_date`) FROM `' . $xoopsDB->prefix('jill_booking_date') . '` WHERE `jb_sn`=?', 'i', [(int) $jb_sn]);
+        return $xoopsDB->fetchRow($result)[0] >= date('Y-m-d');
     }
 
     // 一張預約單的明細數
@@ -255,7 +263,7 @@ class Jill_booking_date
         global $xoopsDB;
         $result = Utility::query('SELECT a.`pass_date`, b.`jb_uid` FROM `' . $xoopsDB->prefix('jill_booking_date') . '` AS a
             JOIN `' . $xoopsDB->prefix('jill_booking') . "` AS b ON b.`jb_sn`=a.`jb_sn`
-            WHERE a.`pass_date` IS NOT NULL AND a.`jb_date`=? AND a.`jbt_sn`=? AND a.`jb_waiting`=1", 'si', [$date, $jbt_sn]);
+            WHERE a.`pass_date` IS NOT NULL AND a.`jb_status`='1' AND a.`jb_date`=? AND a.`jbt_sn`=? ORDER BY a.`jb_waiting` LIMIT 1", 'si', [$date, $jbt_sn]);
         $row = $xoopsDB->fetchRow($result);
         return $row ? $row[0] . _MD_JILLBOOKIN_HADPASS . \XoopsUser::getUnameFromId($row[1], 1) : '';
     }

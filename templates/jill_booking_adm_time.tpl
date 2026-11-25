@@ -1,5 +1,5 @@
 <div class="jb-wrap">
-  <{if $now_op=="list_jill_booking_time"}>
+  <{if $now_op|default:''=='list_jill_booking_time'}>
     <{$formValidator_code|default:''}>
     <{$jeditable_set|default:''}>
     <script type="text/javascript">
