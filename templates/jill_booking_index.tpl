@@ -103,7 +103,7 @@
         <i class="fa-solid fa-circle-info mt-1" aria-hidden="true"></i>
         <ul class="mb-0 ps-3">
           <li><{$smarty.const._MD_JILLBOOKIN_CHOOSEITEMINFO}></li>
-          <li><{$smarty.const._MD_JILLBOOKIN_PLEASE_LOGIN}></li>
+          <{if !$xoops_isuser}><li><{$smarty.const._MD_JILLBOOKIN_PLEASE_LOGIN}></li><{/if}>
         </ul>
       </div>
     <{/if}>

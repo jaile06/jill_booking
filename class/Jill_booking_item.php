@@ -112,7 +112,7 @@ class Jill_booking_item
         My97DatePicker::render();
         $formValidator = new FormValidator('#myForm', true);
         $xoopsTpl->assign('formValidator_code', $formValidator->render());
-        Utility::token_form();
+        $xoopsTpl->assign('token', Tools::token());
         $xoopsTpl->assign('action', $_SERVER['PHP_SELF']);
         $xoopsTpl->assign('now_op', 'jill_booking_item_form');
         $xoopsTpl->assign('next_op', $jbi_sn ? 'update_jill_booking_item' : 'insert_jill_booking_item');
@@ -180,7 +180,7 @@ class Jill_booking_item
             }
         }
 
-        Utility::token_form();
+        $xoopsTpl->assign('token', Tools::token());
         $xoopsTpl->assign('action', $_SERVER['PHP_SELF']);
         $xoopsTpl->assign('jbi_title', sprintf(_MA_JILLBOOKIN_APPROVAL, Tools::esc($item['jbi_title'])));
         $xoopsTpl->assign('now_op', 'jbi_approval_form');

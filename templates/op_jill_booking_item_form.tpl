@@ -70,7 +70,8 @@
 
       <div class="text-center mt-4">
         <input type="hidden" name="jbi_sn" value="<{$jbi_sn|default:''}>">
-        <{$token_form|default:''}>
+        <{* 不帶 id：後台佈景已有 #XOOPS_TOKEN_REQUEST *}>
+        <input type="hidden" name="XOOPS_TOKEN_REQUEST" value="<{$token|default:''}>">
         <input type="hidden" name="op" value="<{$next_op|default:''}>">
         <button type="submit" class="btn btn-primary px-4">
           <{$smarty.const._TAD_SAVE}>
