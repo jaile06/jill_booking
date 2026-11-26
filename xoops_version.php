@@ -13,7 +13,7 @@ $modversion['image'] = "images/logo.png";
 $modversion['dirname'] = basename(__DIR__);
 
 //---模組狀態資訊---//
-$modversion['release_date'] = '2026-11-24';
+$modversion['release_date'] = '2026/11/24'; // 核心 ModuleAdmin::renderAbout() 只拆 '/'
 $modversion['module_website_url'] = '';
 $modversion['module_website_name'] = _MI_JILLBOOKIN_AUTHOR_WEB;
 $modversion['module_status'] = 'release';

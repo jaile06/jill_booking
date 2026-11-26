@@ -5,7 +5,6 @@ use XoopsModules\Jill_booking\Tools;
 
 $GLOBALS['xoopsOption']['template_main'] = 'jill_booking_adm_time.tpl';
 require_once __DIR__ . '/header.php';
-$xoopsLogger->activated = false;
 /*-----------執行動作判斷區----------*/
 $op = Request::getString('op');
 $jbt_sn = Request::getInt('jbt_sn');
@@ -38,10 +37,12 @@ switch ($op) {
         exit;
 
     case "change_enable":
+        $xoopsLogger->activated = false;
         Tools::xoops_security_check(true);
         die(Jill_booking_time::toggle($jbt_sn, Request::getString('week', '', 'POST')));
 
     case "save_jbt_title":
+        $xoopsLogger->activated = false;
         Tools::xoops_security_check(true);
         die(Jill_booking_time::save_title($jbt_sn));
 
