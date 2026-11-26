@@ -161,7 +161,7 @@ class Jill_booking
                 $jeditable->render();
             }
             $item['jbi_title'] = Tools::esc($item['jbi_title']);
-            $item['jbi_desc'] = $item['jbi_desc'] === '' ? '' : $myts->displayTarea($item['jbi_desc'], 1, 1, 1, 1, 0);
+            $item['jbi_desc'] = $item['jbi_desc'] === '' ? '' : Tools::purify_html($myts->displayTarea($item['jbi_desc'], 1, 1, 1, 1, 0));
             $xoopsTpl->assign('timeArr', $timeArr);
             $xoopsTpl->assign('bookingArr', $bookingArr);
             $xoopsTpl->assign('itemArr', $item);

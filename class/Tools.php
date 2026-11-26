@@ -12,6 +12,169 @@ class Tools
         return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
     }
 
+    // 富文字 HTML 白名單淨化（防 Stored XSS，同時保留安全排版）
+    public static function purify_html($html)
+    {
+        $html = (string) $html;
+        if (trim($html) === '') {
+            return '';
+        }
+        if (!class_exists('\DOMDocument')) {
+            return self::esc($html);
+        }
+
+        $prev = libxml_use_internal_errors(true);
+        try {
+            $dom = new \DOMDocument('1.0', 'UTF-8');
+            $wrapped = '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>' . $html . '</body></html>';
+            if (!$dom->loadHTML($wrapped, LIBXML_NONET)) {
+                return self::esc($html);
+            }
+            $body = $dom->getElementsByTagName('body')->item(0);
+            if (!$body) {
+                return '';
+            }
+            self::sanitize_dom_node($body);
+
+            $out = '';
+            foreach ($body->childNodes as $child) {
+                $out .= $dom->saveHTML($child);
+            }
+            return $out;
+        } finally {
+            libxml_clear_errors();
+            libxml_use_internal_errors($prev);
+        }
+    }
+
+    private static function sanitize_dom_node(\DOMNode $node)
+    {
+        static $drop_tags = [
+            'script', 'style', 'iframe', 'frame', 'frameset', 'object', 'embed', 'applet',
+            'svg', 'math', 'template', 'noscript', 'head', 'title', 'meta', 'link', 'base',
+            'form', 'input', 'button', 'select', 'textarea', 'option',
+        ];
+        static $allow_tags = [
+            'p', 'br', 'hr', 'div', 'span', 'strong', 'b', 'em', 'i', 'u', 's', 'del', 'ins',
+            'sub', 'sup', 'small', 'mark', 'code', 'pre', 'blockquote', 'h1', 'h2', 'h3', 'h4',
+            'h5', 'h6', 'ul', 'ol', 'li', 'dl', 'dt', 'dd', 'a', 'img', 'table', 'caption',
+            'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'colgroup', 'col', 'figure', 'figcaption',
+        ];
+        static $global_attrs = ['class', 'title', 'dir', 'lang', 'style'];
+        static $tag_attrs = [
+            'a' => ['href', 'target', 'rel'],
+            'img' => ['src', 'alt', 'width', 'height'],
+            'td' => ['colspan', 'rowspan', 'scope', 'headers'],
+            'th' => ['colspan', 'rowspan', 'scope', 'headers'],
+            'col' => ['span'],
+            'colgroup' => ['span'],
+            'ol' => ['start', 'type'],
+        ];
+
+        $parent = $node;
+        foreach (iterator_to_array($parent->childNodes) as $child) {
+            if ($child instanceof \DOMComment) {
+                $parent->removeChild($child);
+                continue;
+            }
+            if (!$child instanceof \DOMElement) {
+                continue;
+            }
+            $tag = strtolower($child->nodeName);
+            if (in_array($tag, $drop_tags, true)) {
+                $parent->removeChild($child);
+                continue;
+            }
+            self::sanitize_dom_node($child);
+            if (!in_array($tag, $allow_tags, true)) {
+                foreach (iterator_to_array($child->childNodes) as $grand) {
+                    $parent->insertBefore($grand, $child);
+                }
+                $parent->removeChild($child);
+                continue;
+            }
+
+            $allowed = array_merge($global_attrs, $tag_attrs[$tag] ?? []);
+            foreach (iterator_to_array($child->attributes) as $attr) {
+                $name = strtolower($attr->nodeName);
+                if (!in_array($name, $allowed, true)) {
+                    $child->removeAttribute($attr->nodeName);
+                    continue;
+                }
+                if ($name === 'href' || $name === 'src') {
+                    $url = self::clean_url($attr->nodeValue, $name === 'src');
+                    if ($url === null) {
+                        $child->removeAttribute($attr->nodeName);
+                    } else {
+                        $child->setAttribute($name, $url);
+                    }
+                } elseif ($name === 'style') {
+                    $css = self::clean_style($attr->nodeValue);
+                    if ($css === '') {
+                        $child->removeAttribute($attr->nodeName);
+                    } else {
+                        $child->setAttribute('style', $css);
+                    }
+                } elseif ($name === 'target') {
+                    $target = strtolower(trim($attr->nodeValue));
+                    if (!in_array($target, ['_blank', '_self'], true)) {
+                        $child->removeAttribute($attr->nodeName);
+                    } else {
+                        $child->setAttribute('target', $target);
+                    }
+                }
+            }
+            if ($tag === 'a' && $child->getAttribute('target') === '_blank') {
+                $child->setAttribute('rel', 'noopener noreferrer');
+            }
+        }
+    }
+
+    private static function clean_url($value, $is_img)
+    {
+        $url = trim((string) preg_replace('/[\x00-\x20\x7F]+/', '', (string) $value));
+        if ($url === '' || strpos($url, '//') === 0) {
+            return null;
+        }
+        $scheme_pos = strpos($url, ':');
+        $slash_pos = strpos($url, '/');
+        if ($scheme_pos === false || ($slash_pos !== false && $slash_pos < $scheme_pos)) {
+            if ($is_img && ($url[0] === '#' || $url[0] === '?')) {
+                return null;
+            }
+            return $url;
+        }
+        $scheme = strtolower(substr($url, 0, $scheme_pos));
+        $allowed = $is_img ? ['http', 'https'] : ['http', 'https', 'mailto', 'tel'];
+        return in_array($scheme, $allowed, true) ? $url : null;
+    }
+
+    private static function clean_style($style)
+    {
+        static $allowed_props = [
+            'color', 'background-color', 'text-align', 'vertical-align', 'width', 'height',
+            'min-width', 'max-width', 'border', 'border-collapse', 'border-spacing',
+            'padding', 'margin', 'font-weight', 'font-style', 'text-decoration',
+            'list-style-type', 'float',
+        ];
+        $safe = [];
+        foreach (explode(';', (string) $style) as $decl) {
+            $parts = explode(':', $decl, 2);
+            if (count($parts) !== 2) {
+                continue;
+            }
+            $prop = strtolower(trim($parts[0]));
+            $val = trim($parts[1]);
+            if (!in_array($prop, $allowed_props, true)) {
+                continue;
+            }
+            if (preg_match('/^(?:[#a-zA-Z0-9\s.,%+-]+|rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\))$/', $val)) {
+                $safe[] = "{$prop}: {$val}";
+            }
+        }
+        return implode('; ', $safe);
+    }
+
     // 嚴格的 Y-m-d 檢查
     public static function is_date($date)
     {
@@ -171,7 +334,7 @@ class Tools
             return true;
         }
         [$start, $end] = self::item_range($slot);
-        return $slot['jbi_enable'] == '1' && $date >= $start && ($end === '' || $date <= $end);
+        return $slot['jbi_enable'] == '1' && (string) $slot['jbi_start'] <= date('Y-m-d') && $date >= $start && ($end === '' || $date <= $end);
     }
 
     // IN (?,?) 的佔位字串

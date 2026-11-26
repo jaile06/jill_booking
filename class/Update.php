@@ -122,7 +122,7 @@ class Update
             _MA_JILLBOOKIN_ORPHAN_WEEK => $lost('week', 'main', 'jb_sn'),
             _MA_JILLBOOKIN_ORPHAN_SLOT => $lost('date', 'time', 'jbt_sn'),
             _MA_JILLBOOKIN_ORPHAN_TIME => $lost('time', 'item', 'jbi_sn'),
-            _MA_JILLBOOKIN_DUP_WAITING => "FROM (SELECT 1 FROM {$t['date']} GROUP BY `jb_date`, `jbt_sn`, `jb_waiting` HAVING COUNT(*)>1) AS a",
+            _MA_JILLBOOKIN_DUP_WAITING => "FROM (SELECT 1 FROM {$t['date']} GROUP BY `jbt_sn`, `jb_date`, `jb_waiting` HAVING COUNT(*)>1) AS a",
         ];
         $report = [];
         foreach ($checks as $label => $from) {

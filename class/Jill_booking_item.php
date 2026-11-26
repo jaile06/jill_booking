@@ -101,7 +101,7 @@ class Jill_booking_item
             'jbi_sn' => 0, 'jbi_title' => '', 'jbi_desc' => '', 'jbi_start' => date('Y-m-d'), 'jbi_end' => '', 'jbi_enable' => '1',
         ];
 
-        $Editor = new CkEditor('jill_booking', 'jbi_desc', $data['jbi_desc'] === '' ? '' : $myts->displayTarea($data['jbi_desc'], 1, 1, 1, 1, 0));
+        $Editor = new CkEditor('jill_booking', 'jbi_desc', $data['jbi_desc'] === '' ? '' : Tools::purify_html($myts->displayTarea($data['jbi_desc'], 1, 1, 1, 1, 0)));
         $Editor->setToolbarSet('mySimple');
         $xoopsTpl->assign('Editor_code', $Editor->render());
 
@@ -170,7 +170,7 @@ class Jill_booking_item
         $approvers = explode(',', (string) $item['jbi_approval']);
 
         $from_arr = $to_arr = [];
-        $result = Utility::query('SELECT `uid`, `name`, `uname` FROM `' . $xoopsDB->prefix('users') . '` ORDER BY `uname`');
+        $result = Utility::query('SELECT `uid`, `name`, `uname` FROM `' . $xoopsDB->prefix('users') . '` WHERE `level`>0 ORDER BY `uname`');
         while (list($uid, $name, $uname) = $xoopsDB->fetchRow($result)) {
             $label = Tools::esc("{$name} ({$uname})");
             if (in_array((string) $uid, $approvers, true)) {
@@ -227,7 +227,7 @@ class Jill_booking_item
             Tools::deny(_MD_JILLBOOKIN_BAD_ITEM);
         }
         $enable = Request::getInt('jbi_enable', 0, 'POST') === 1 ? '1' : '0';
-        return [$title, Request::getText('jbi_desc', '', 'POST'), $start, $end, $enable];
+        return [$title, Tools::purify_html(Request::getText('jbi_desc', '', 'POST')), $start, $end, $enable];
     }
 
     // 轉成顯示用內容
@@ -243,7 +243,7 @@ class Jill_booking_item
         $data['jbi_enable'] = $data['jbi_enable'] == '1' ? $yes : $no;
         $data['jbi_approval'] = $names ? implode(',', $names) : $no;
         $data['jbi_title'] = Tools::esc($data['jbi_title']);
-        $data['jbi_desc'] = $myts->displayTarea($data['jbi_desc'], 1, 1, 1, 1, 0);
+        $data['jbi_desc'] = $data['jbi_desc'] === '' ? '' : Tools::purify_html($myts->displayTarea($data['jbi_desc'], 1, 1, 1, 1, 0));
         return $data;
     }
 

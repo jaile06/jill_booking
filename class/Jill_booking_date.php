@@ -207,8 +207,11 @@ class Jill_booking_date
                 $data['jb_uid'] = \XoopsUser::getUnameFromId($data['jb_uid'], 1);
                 $data['jb_booking_content'] = Tools::esc($data['jb_booking_content']);
                 $data['jbt_title'] = Tools::esc($data['jbt_title']);
-                $data['had_pass'] = self::had_pass($data['jbt_sn'], $data['jb_date']);
                 $all_content[] = $data;
+            }
+            $passed = self::had_pass_map($all_content);
+            foreach ($all_content as $i => $data) {
+                $all_content[$i]['had_pass'] = $passed["{$data['jbt_sn']}_{$data['jb_date']}"] ?? '';
             }
             $xoopsTpl->assign('bar', $PageBar['bar']);
             $xoopsTpl->assign('all_content', $all_content);
@@ -228,7 +231,7 @@ class Jill_booking_date
         global $xoopsDB, $xoopsUser;
         // 場地由時段查出，不信任請求帶來的 jbi_sn
         $slot = Tools::slot($jbt_sn);
-        if (!$slot || !Tools::is_date($date) || !Tools::is_approver($slot['jbi_sn'])) {
+        if (!$slot || !Tools::is_date($date) || $date < date('Y-m-d') || !Tools::is_approver($slot['jbi_sn'])) {
             Tools::deny(_MD_JILLBOOKIN_NO_PERM, true);
         }
         $table = $xoopsDB->prefix('jill_booking_date');
@@ -263,14 +266,24 @@ class Jill_booking_date
         return '1';
     }
 
-    // 該時段已核給誰；預約助手等直接核准的沒有通過日期
-    private static function had_pass($jbt_sn, $date)
+    // 批次查出該頁各時段已核給誰（預約助手等直接核准的沒有通過日期）
+    private static function had_pass_map(array $rows)
     {
         global $xoopsDB;
-        $result = Utility::query('SELECT a.`pass_date`, b.`jb_uid` FROM `' . $xoopsDB->prefix('jill_booking_date') . '` AS a
+        if (!$rows) {
+            return [];
+        }
+        $jbt_sns = array_values(array_unique(array_map('intval', array_column($rows, 'jbt_sn'))));
+        $dates = array_column($rows, 'jb_date');
+        $result = Utility::query('SELECT a.`jbt_sn`, a.`jb_date`, a.`pass_date`, b.`jb_uid` FROM `' . $xoopsDB->prefix('jill_booking_date') . '` AS a
             JOIN `' . $xoopsDB->prefix('jill_booking') . "` AS b ON b.`jb_sn`=a.`jb_sn`
-            WHERE a.`jb_status`='1' AND a.`jb_date`=? AND a.`jbt_sn`=? ORDER BY a.`jb_waiting` LIMIT 1", 'si', [$date, $jbt_sn]);
-        $row = $xoopsDB->fetchRow($result);
-        return $row ? $row[0] . _MD_JILLBOOKIN_HADPASS . \XoopsUser::getUnameFromId($row[1], 1) : '';
+            WHERE a.`jb_status`='1' AND a.`jbt_sn` IN (" . Tools::marks($jbt_sns) . ') AND a.`jb_date` BETWEEN ? AND ? ORDER BY a.`jb_waiting`',
+            str_repeat('i', count($jbt_sns)) . 'ss', [...$jbt_sns, min($dates), max($dates)]);
+        $map = [];
+        while ($row = $xoopsDB->fetchArray($result)) {
+            $key = "{$row['jbt_sn']}_{$row['jb_date']}";
+            $map[$key] ??= (string) $row['pass_date'] . _MD_JILLBOOKIN_HADPASS . \XoopsUser::getUnameFromId($row['jb_uid'], 1);
+        }
+        return $map;
     }
 }
