@@ -1,6 +1,5 @@
 <?php
 xoops_loadLanguage('main', 'tadtools');
-//jill_booking-list
 define("_MD_JILLBOOKIN_PLEASE_LOGIN", "若要預約請先登入");
 define("_MD_JILLBOOKIN_CHOOSEITEMINFO", "請在上方下拉選單內選擇場地");
 define("_MD_JILLBOOKIN_NOAPPROVAL", "您沒有審核資格！！");

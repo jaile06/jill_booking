@@ -8,14 +8,12 @@ use XoopsModules\Tadtools\My97DatePicker;
 use XoopsModules\Tadtools\Tmt;
 use XoopsModules\Tadtools\Utility;
 
-// 場地
 // token 由入口檔驗證
 class Jill_booking_item
 {
     // 啟用中的條件；停用日當天仍可用
     const ENABLED = "`jbi_enable`='1' AND `jbi_start`<=CURDATE() AND (`jbi_end`>=CURDATE() OR `jbi_end` IS NULL)";
 
-    // 場地列表
     public static function index()
     {
         global $xoopsDB, $xoopsTpl;
@@ -79,7 +77,6 @@ class Jill_booking_item
         return $opt;
     }
 
-    // 顯示單一場地
     public static function show($jbi_sn)
     {
         global $xoopsTpl;
@@ -118,7 +115,6 @@ class Jill_booking_item
         $xoopsTpl->assign('next_op', $jbi_sn ? 'update_jill_booking_item' : 'insert_jill_booking_item');
     }
 
-    // 新增
     public static function store()
     {
         global $xoopsDB;
@@ -162,7 +158,6 @@ class Jill_booking_item
         return _TAD_SORTED . ' (' . date('Y-m-d H:i:s') . ')';
     }
 
-    // 審核者設定表單
     public static function approval_form($jbi_sn)
     {
         global $xoopsDB, $xoopsTpl;
@@ -187,7 +182,6 @@ class Jill_booking_item
         $xoopsTpl->assign('tmt_box', Tmt::render('jbi_approval', $from_arr, $to_arr, ['op' => 'save_jbi_approval', 'jbi_sn' => $jbi_sn]));
     }
 
-    // 儲存審核者
     public static function save_approval($jbi_sn)
     {
         global $xoopsDB;
@@ -196,7 +190,6 @@ class Jill_booking_item
         Utility::query('UPDATE `' . $xoopsDB->prefix('jill_booking_item') . '` SET `jbi_approval`=? WHERE `jbi_sn`=?', 'si', [implode(',', array_unique($uids)), $jbi_sn]);
     }
 
-    // 是否已有預約
     public static function has_booking($jbi_sn)
     {
         global $xoopsDB;

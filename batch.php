@@ -3,12 +3,10 @@ use Xmf\Request;
 use XoopsModules\Jill_booking\Jill_booking;
 use XoopsModules\Jill_booking\Tools;
 
-/*-----------引入檔案區--------------*/
 require_once __DIR__ . '/header.php';
 $GLOBALS['xoopsOption']['template_main'] = "jill_booking_batch.tpl";
 require_once XOOPS_ROOT_PATH . '/header.php';
 
-/*-----------執行動作判斷區----------*/
 $op = Request::getString('op');
 $jbi_sn = Request::getInt('jbi_sn');
 $key = Request::getString('key');
@@ -37,5 +35,4 @@ switch ($op) {
         break;
 }
 
-/*-----------秀出結果區--------------*/
 require_once __DIR__ . '/footer.php';

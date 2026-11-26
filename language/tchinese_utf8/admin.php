@@ -1,6 +1,5 @@
 <?php
 xoops_loadLanguage('admin_common', 'tadtools');
-//main
 define("_MA_JILLBOOKIN_ADD", "新增場地");
 define("_MA_JILLBOOKIN_ADD_TIME", "新增時段");
 define("_MA_JILLBOOKIN_JBT_TITLE", "時段標題");

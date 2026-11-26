@@ -27,9 +27,6 @@ define('_MI_JB_BOPT0_DEF', 'Collapse tab');
 define('_MI_JB_BNAME2', "This week's Booking");
 define('_MI_JB_BDESC2', "This week's Booking (jill_booking_week_list)");
 
-//1.1 (mamba)
-
-// The name of this module
 define('_MI_JILLBOOKIN_DIRNAME', basename(dirname(dirname(__DIR__))));
 define('_MI_JILLBOOKIN_HELP_HEADER', __DIR__ . '/help/helpheader.html');
 define('_MI_JILLBOOKIN_BACK_2_ADMIN', 'Back to Administration of ');

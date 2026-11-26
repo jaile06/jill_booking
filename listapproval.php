@@ -3,7 +3,6 @@ use Xmf\Request;
 use XoopsModules\Jill_booking\Jill_booking_date;
 use XoopsModules\Jill_booking\Tools;
 
-/*-----------引入檔案區--------------*/
 require_once __DIR__ . '/header.php';
 $GLOBALS['xoopsOption']['template_main'] = "jill_booking_listapproval.tpl";
 require_once XOOPS_ROOT_PATH . '/header.php';
@@ -11,7 +10,6 @@ if (empty($_SESSION['Isapproval'])) {
     redirect_header(XOOPS_URL, 3, _MD_JILLBOOKIN_NOAPPROVAL);
 }
 
-/*-----------執行動作判斷區----------*/
 $op = Request::getString('op');
 $jb_info = Request::getString('jb_info');
 $jb_sn = Request::getInt('jb_sn');
@@ -40,5 +38,4 @@ switch ($op) {
         break;
 }
 
-/*-----------秀出結果區--------------*/
 require_once __DIR__ . '/footer.php';

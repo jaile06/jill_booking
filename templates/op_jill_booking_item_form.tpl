@@ -1,9 +1,7 @@
 <div class="container">
-  <!--套用formValidator驗證機制-->
   <{$formValidator_code|default:''}>
   <div class="border rounded p-3 p-md-4 bg-white">
     <form action="<{$action|default:''}>" method="post" id="myForm">
-      <!--場地名稱-->
       <div class="row mb-3 align-items-center">
         <label class="col-sm-2 col-form-label text-sm-end fw-semibold" for="jbi_title">
           <{$smarty.const._MA_JILLBOOKIN_JBI_TITLE}>
@@ -13,7 +11,6 @@
         </div>
       </div>
 
-      <!--啟用日期、停用日期-->
       <div class="row mb-3 align-items-center">
         <label class="col-sm-2 col-form-label text-sm-end fw-semibold" for="jbi_start">
           <{$smarty.const._MA_JILLBOOKIN_JBI_START}>
@@ -39,7 +36,6 @@
         </div>
       </div>
 
-      <!--是否可借-->
       <fieldset class="row mb-3 align-items-center">
         <legend class="col-form-label col-sm-2 pt-0 text-sm-end fw-semibold fs-6">
           <{$smarty.const._MA_JILLBOOKIN_JBI_ENABLE}>
@@ -58,7 +54,6 @@
         </div>
       </fieldset>
 
-      <!--場地說明-->
       <div class="row mb-3">
         <label class="col-sm-2 col-form-label text-sm-end fw-semibold" for="jbi_desc">
           <{$smarty.const._MA_JILLBOOKIN_JBI_DESC}>

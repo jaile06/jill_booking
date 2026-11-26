@@ -6,7 +6,6 @@ use XoopsModules\Tadtools\Utility;
 
 class Tools
 {
-    // 輸出跳脫
     public static function esc($value)
     {
         return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
@@ -234,7 +233,6 @@ class Tools
         ");
     }
 
-    // 拒絕請求並結束
     public static function deny($msg, $ajax = false, $url = '')
     {
         if ($ajax) {
@@ -254,7 +252,6 @@ class Tools
         $_SESSION['Isapproval'] = self::is_any_approver();
     }
 
-    // 是否具有預約權限
     public static function can_booking()
     {
         global $xoopsUser, $xoopsModuleConfig;

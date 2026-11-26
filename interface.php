@@ -21,7 +21,6 @@ if ($_SESSION['can_booking']) {
     $interface_menu[_MD_JILLBOOKIN_SMNAME2] = "batch.php";
     $interface_icon[_MD_JILLBOOKIN_SMNAME2] = "fa-address-book";
 
-    //個人預約清單
     $interface_menu[_MD_JILLBOOKIN_SMNAME3] = "list.php";
     $interface_icon[_MD_JILLBOOKIN_SMNAME3] = "fa-id-card";
 }

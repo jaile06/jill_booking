@@ -2,7 +2,6 @@
 
 xoops_loadLanguage('admin_common', 'tadtools');
 
-//main
 define('_MA_JILLBOOKIN_ADD', 'New Venue');
 define('_MA_JILLBOOKIN_ADD_TIME', 'Submit Room');
 define('_MA_JILLBOOKIN_JBT_TITLE', 'Room Name');

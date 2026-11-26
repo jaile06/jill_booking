@@ -106,7 +106,6 @@
 
     init();
 
-    // 初始化
     function init() {
       jbiDateText.text(null);
       timeList.text(null);
@@ -115,7 +114,6 @@
       data = {...initData};
     }
 
-    // 取得某場地的全部時段
     function getTimesOfItem() {
       if (bookingDateInput.val() === '' || jbiSnSelect.val() === '') {
         return;
@@ -138,7 +136,6 @@
         }).catch(err => console.log(err));
     }
 
-    // 取得當天開放之時段
     function getTimeByDay(data, day) {
       if (!data) {
         return null;
@@ -148,7 +145,6 @@
       });
     }
 
-    // 產生時段列表
     function generateTimeList(items) {
       timeList.html('<div class="list-group"></div>');
       let listGroup = timeList.find('.list-group');

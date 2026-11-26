@@ -98,7 +98,6 @@ class Jill_booking
         return $jeditable->render('force') . self::cell_own($booking, $slot, $jb_date, '');
     }
 
-    // 週曆
     public static function calendar($jbi_sn, $getdate = '')
     {
         global $xoopsTpl, $xoopsUser;
@@ -225,7 +224,6 @@ class Jill_booking
 
     /********************* 批次預約 *********************/
 
-    // 批次表單
     public static function batch_form($jbi_sn)
     {
         global $xoopsTpl;
@@ -461,7 +459,6 @@ class Jill_booking
 
     /********************* 區塊 *********************/
 
-    // 今日預約
     public static function block_today()
     {
         $today = date('Y-m-d');
@@ -488,7 +485,6 @@ class Jill_booking
         return $content;
     }
 
-    // 本週預約
     public static function block_week(array $weekArr)
     {
         $today = date('Y-m-d');

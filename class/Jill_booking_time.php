@@ -60,7 +60,6 @@ class Jill_booking_time
         $xoopsTpl->assign('jeditable_set', $jeditable->cols ? $jeditable->render() : '');
     }
 
-    // 某場地的所有時段
     public static function get_all($jbi_sn)
     {
         global $xoopsDB;
@@ -172,7 +171,6 @@ class Jill_booking_time
         return _MA_UPDATE_COMPLETED . ' (' . date('Y-m-d H:i:s') . ')';
     }
 
-    // 被預約次數
     public static function booked_count($jbt_sn)
     {
         global $xoopsDB;
